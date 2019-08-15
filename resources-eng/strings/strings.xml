@@ -4,7 +4,7 @@
     <string id="showEvent">Show Event</string> 
     <string id="eventName">Event Name</string>
     <string id="eventDate">Event Date</string>
-    <string id="daysTitle">D.</string>
+    <string id="daysTitle">d.</string>
     
     <string id="sleepStart">Sleep time (Hour)</string>   
     <string id="sleepEnd">Wake time (Hour)</string>      
@@ -48,7 +48,10 @@
     <string id="lines">Lines</string>
     
     <string id="enableNightScreen">Enable Night Screen</string>
-    <string id="anyMessage">Any  Message</string>
- 
+    
+    <string id="anyMessage">Any Message</string>
+    <string id="receiveAnyMessage">Receive External Data</string>
+    <string id="messageURL">Data Provider URL</string>
+<!--     <string id="deviceId">DeviceId</string>  -->
  
 </strings>

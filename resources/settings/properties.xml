@@ -2,7 +2,7 @@
 
     <property id="showEvent"  type="boolean" >true</property>
     <property id="eventName"  type="string" >Race</property>
-    <property id="eventDate"  type="number" >1551394800</property>
+    <property id="eventDate"  type="number" >1571522400</property>
     <property id="sleepStart" type="number" >22</property>
     <property id="sleepEnd"   type="number" >6</property>
     <property id="defaultColor"  type="boolean" >false</property>
@@ -25,6 +25,9 @@
 	<property id="hourStyle"   type="number" >1</property>
 	<property id="enableNightScreen"   type="boolean" >true</property>
 	<property id="anyMessage"   type="string" ></property>
+	<property id="receiveAnyMessage"   type="boolean" >false</property>
+    <property id="messageURL"   type="string" ></property>	
+<!-- 	<property id="deviceId"   type="string" >NA</property>  -->
  
  
 </properties>

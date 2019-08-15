@@ -38,44 +38,68 @@ static var hourStyle=null;
 
 static var enableNightScreen=true;
 static var anyMessage="";
+static var chartData=null;
+static var receiveAnyMessage=false;
+static var messageURL=null;
+
+static var sleepStartTime=null;
+static var sleepEndTime=null;
 
    function initialize() {
       AppBase.initialize();
       readConfig();
-  //    System.println("JBWatchApp.initialize");
+      calcSleepTime();
+  	  if (isDebug) {  System.println("JBWatchApp.initialize"); }
    }
 
     function onStart(state) {
-  //     System.println("JBWatchApp.onStart");     
+  		if (isDebug) {  System.println("JBWatchApp.onStart"); }
     }
 
     function onStop(state) {
-   // 	System.println("JBWatchApp.onStop");
+   		if (isDebug) {  System.println("JBWatchApp.onStop"); }
     }
 
     function onSettingsChanged() {
+    if (isDebug) {  System.println("JBWatchApp.onSettingsChanged"); }
         readConfig();
         Ui.requestUpdate();
     }
 
     function getInitialView() {
+    	if (isDebug) {  System.println("JBWatchApp.getInitialView"); }
       	if (view == null ) {
         	view=new JBWatchView();
      	}
  		return [view];
     }
     
-   function onBackgroundData(data)
-    {
+    function getServiceDelegate() {  
+    	if (isDebug) {  System.println("JBWatchApp.getServiceDelegate"); }
+		if (delegate == null) {
+	   		delegate = new JBWatchDelegate();
+		}
+		return [delegate];    
+    }
+    
+   function onBackgroundData(data) {
  	if (isDebug) {	System.println("JBWatchApp.onBackgroundData"+data); }
+ 	anyMessage=data.get("message");
+ 	chartData=data.get("data");
+ 	Ui.requestUpdate();
     }
     
   function readConfig() {
+
+     try {
+     App.Properties.setValue("deviceId",System.getDeviceSettings().uniqueIdentifier);
+     } catch (e) {} 
      var defaultColor=App.Properties.getValue("defaultColor");
      if (defaultColor) {
      	resetColors();
      } 
-     
+     receiveAnyMessage=App.Properties.getValue("receiveAnyMessage");
+     messageURL=App.Properties.getValue("messageURL");
      eventName=Application.Properties.getValue("eventName");
      eventDate=Application.Properties.getValue("eventDate");
      showEvent=Application.Properties.getValue("showEvent");
@@ -109,9 +133,10 @@ static var anyMessage="";
       enableNightScreen=App.Properties.getValue("enableNightScreen");
       
       anyMessage=App.Properties.getValue("anyMessage");
-         
+               
   }
   function resetColors() {
+     try {
       	App.Properties.setValue("faceForegroundColor",0xFFFFFF);
      	App.Properties.setValue("faceBackgroundColor",0x000000);
      	App.Properties.setValue("ringColor",0xFFFFFF);
@@ -124,7 +149,30 @@ static var anyMessage="";
      	App.Properties.setValue("summerColor",0xFF0000);
      	App.Properties.setValue("autumnColor",0xFF5500);
      	App.Properties.setValue("winterColor",0xFFFFFF);
+     } catch (ex) {} 
      	    	    	    	    	
   }
+  
+  static function calcSleepTime() {
+  	if (isDebug) {  System.println("JBWatchApp.calcSleepTime"); }  
+  	try {
+       sleepStartTime=new Time.Moment(Time.today().value()+(JBWatchApp.sleepStart)*3600);
+       var sleepHours=0;
+       var dayShift=true;
+       if (JBWatchApp.sleepStart>JBWatchApp.sleepEnd ) {
+         sleepHours=24-JBWatchApp.sleepStart+JBWatchApp.sleepEnd;
+       } else {
+         sleepHours=JBWatchApp.sleepEnd-JBWatchApp.sleepStart;
+         dayShift=false;
+       } 
+       sleepEndTime=sleepStartTime.add(new Time.Duration(sleepHours*3600));
+       if ( dayShift && sleepEndTime.value()>Time.now().value()+24*3600 ) {
+          sleepStartTime=sleepStartTime.subtract(new Time.Duration(24*3600));
+          sleepEndTime  =sleepEndTime.subtract(new Time.Duration(24*3600));
+       }
+     } catch (ex) {}
+        
+  }
+   
 
 }

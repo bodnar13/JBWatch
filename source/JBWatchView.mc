@@ -30,7 +30,9 @@ class JBWatchView extends Ui.WatchFace {
   var txtLine5=radial+radial*0.4;
   var txtLine4=txtLine5-fontHeight;
       
-  
+  var chartBlockWidth=7;
+  var chartBlockHeight=6;
+  var chartY=device.screenHeight/2-chartBlockHeight/2;
 
   var sleep_ring  = zoom*(radial-rel_sleep_ring);  // 117;
   var hour_ring   = zoom*(radial-rel_hour_ring);   // 110;
@@ -64,7 +66,7 @@ class JBWatchView extends Ui.WatchFace {
   var month;         
   var now;  
   var sleepHours=0;
-   
+    
   
     function initialize() {
         WatchFace.initialize();
@@ -85,22 +87,21 @@ class JBWatchView extends Ui.WatchFace {
        View.onUpdate(dc);
 
        clockTime = System.getClockTime();
-       
-       var slpStart=new Time.Moment(Time.today().value()+(JBWatchApp.sleepStart)*3600);
+//       var slpStart=new Time.Moment(Time.today().value()+(JBWatchApp.sleepStart)*3600);
        sleepHours=0;
-       var dayShift=true;
+//       var dayShift=true;
        if (JBWatchApp.sleepStart>JBWatchApp.sleepEnd ) {
          sleepHours=24-JBWatchApp.sleepStart+JBWatchApp.sleepEnd;
        } else {
          sleepHours=JBWatchApp.sleepEnd-JBWatchApp.sleepStart;
-         dayShift=false;
+  //       dayShift=false;
        } 
-       var slpEnd=slpStart.add(new Time.Duration(sleepHours*3600));
-       if ( dayShift && slpEnd.value()>Time.now().value()+24*3600 ) {
-          slpStart=slpStart.subtract(new Time.Duration(24*3600));
-          slpEnd  =slpEnd.subtract(new Time.Duration(24*3600));
-       }
-       if ( JBWatchApp.enableNightScreen && slpStart.lessThan(Time.now())  && slpEnd.greaterThan(Time.now()) )  {
+//       var slpEnd=slpStart.add(new Time.Duration(sleepHours*3600));
+//       if ( dayShift && slpEnd.value()>Time.now().value()+24*3600 ) {
+//          slpStart=slpStart.subtract(new Time.Duration(24*3600));
+//          slpEnd  =slpEnd.subtract(new Time.Duration(24*3600));
+//       }
+       if ( JBWatchApp.enableNightScreen && JBWatchApp.sleepStartTime.lessThan(Time.now())  && JBWatchApp.sleepEndTime.greaterThan(Time.now()) )  {
             sleep(dc,true);
             minuteHand(dc);
             cross(dc);
@@ -277,7 +278,7 @@ function minuteHand(dc) {
          	m++;
        
          }
-         if (isDebug) {  System.println("hours handend"); }
+         if (isDebug) {  System.println("hours hand end"); }
 }
 
 // SLEEP
@@ -355,9 +356,44 @@ function minuteHand(dc) {
          	dc.setPenWidth(1);
 	}
 	function showMessage(dc) {
-	   if ( JBWatchApp.anyMessage.length()>0 ) {
+	   if (isDebug) {  System.println("showMessage start"); }
+       if ( JBWatchApp.chartData != null ) {
+            for ( var i=0 ; i< JBWatchApp.chartData.size(); i++ ) {
+              var dataColor=JBWatchApp.chartData[i].get("color");
+              var chartColor=Gfx.COLOR_WHITE;
+              switch (dataColor) {
+                case 1:
+                chartColor=Gfx.COLOR_DK_GRAY;
+                break;
+                case 2:
+                chartColor=Gfx.COLOR_ORANGE;
+                break;
+                case 3:
+                chartColor=Gfx.COLOR_RED;
+                break;                                                
+                case 4:
+                chartColor=Gfx.COLOR_YELLOW;
+                break;
+                case 5:
+                chartColor=Gfx.COLOR_DK_BLUE;
+                break;
+                case 6:
+                chartColor=Gfx.COLOR_PURPLE;
+                break;                
+                case 7:
+                chartColor=Gfx.COLOR_DK_GREEN;
+                break;
+
+              }   
+              
+              dc.setColor(chartColor,Gfx.COLOR_BLUE);
+              var tsX=center_x-JBWatchApp.chartData.size()*chartBlockWidth/2;  
+        	  dc.fillRectangle(tsX+i*chartBlockWidth,chartY ,chartBlockWidth-1,chartBlockHeight );
+        	}	
+        } else if ( JBWatchApp.anyMessage != null && JBWatchApp.anyMessage.length()>0  ) {
         	dc.drawText(center_x , txtLine3, Gfx.FONT_XTINY , JBWatchApp.anyMessage, Gfx.TEXT_JUSTIFY_CENTER);
         }
+        if (isDebug) {  System.println("showMessage end"); }
 	}
 
 	function showEvent(dc) {

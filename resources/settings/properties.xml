@@ -2,7 +2,7 @@
 
     <property id="showEvent"  type="boolean" >true</property>
     <property id="eventName"  type="string" >Race</property>
-    <property id="eventDate"  type="number" >1571522400</property>
+    <property id="eventDate"  type="number" >1698476400</property>
     <property id="sleepStart" type="number" >22</property>
     <property id="sleepEnd"   type="number" >6</property>
     <property id="defaultColor"  type="boolean" >false</property>
@@ -21,6 +21,7 @@
 	<property id="showDate"    type="boolean" >true</property>
 	<property id="showMinutes"  type="boolean" >true</property>
 	<property id="showMonth"    type="boolean" >true</property>
+	<property id="showSunrise"   type="boolean" >true</property>
 	<property id="showSeason"   type="boolean" >true</property>
 	<property id="hourStyle"   type="number" >1</property>
 	<property id="enableNightScreen"   type="boolean" >true</property>

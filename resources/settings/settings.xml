@@ -53,6 +53,10 @@
         <settingConfig type="boolean"  />
     </setting>
 
+   <setting propertyKey="@Properties.showSunrise" title="@Strings.showSunrise" >
+        <settingConfig type="boolean"  />
+    </setting>
+
    <setting propertyKey="@Properties.hourStyle" title="@Strings.hourStyle">
         <settingConfig type="list">
 			<listEntry value="1" >@Strings.dots</listEntry>    

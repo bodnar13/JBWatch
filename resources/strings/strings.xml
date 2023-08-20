@@ -42,6 +42,7 @@
     <string id="showMinutes">Show Minutes</string>
     <string id="showMonth">Show Month</string>
     <string id="showSeason">Show Season</string>
+    <string id="showSunrise">Show Sunrise</string>
     
     <string id="hourStyle">Hour Style</string>
     <string id="dots">Dots</string>

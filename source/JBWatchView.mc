@@ -113,7 +113,6 @@ class JBWatchView extends Ui.WatchFace {
    	    
    	  var today=Time.Gregorian.info(now,Time.FORMAT_LONG);
    	            
-      showMessage(dc);
       showEvent(dc);      
 		  monthFace(today,dc);
 		  hoursFace(today,dc);
@@ -330,48 +329,6 @@ function hoursFace(today,dc) {
     dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
     dc.setPenWidth(1);
   }
-
-  function showMessage(dc) {
-    if (isDebug) {
-      System.println("showMessage start"); 
-    }
-    if ( JBWatchApp.chartData != null ) {
-      for ( var i=0 ; i< JBWatchApp.chartData.size(); i++ ) {
-        var dataColor=JBWatchApp.chartData[i].get("color");
-        var chartColor=Gfx.COLOR_WHITE;
-        switch (dataColor) {
-          case 1:
-            chartColor=Gfx.COLOR_DK_GRAY;
-            break;
-          case 2:
-            chartColor=Gfx.COLOR_ORANGE;
-            break;
-          case 3:
-            chartColor=Gfx.COLOR_RED;
-            break;                                                
-          case 4:
-            chartColor=Gfx.COLOR_YELLOW;
-            break;
-          case 5:
-            chartColor=Gfx.COLOR_DK_BLUE;
-            break;
-          case 6:
-            chartColor=Gfx.COLOR_PURPLE;
-            break;                
-          case 7:
-            chartColor=Gfx.COLOR_DK_GREEN;
-            break;
-        }   
-              
-        dc.setColor(chartColor,Gfx.COLOR_BLUE);
-        var tsX=center_x-JBWatchApp.chartData.size()*chartBlockWidth/2;  
-        dc.fillRectangle(tsX+i*chartBlockWidth,chartY ,chartBlockWidth-1,chartBlockHeight );
-      }	
-    } else if ( JBWatchApp.anyMessage != null && JBWatchApp.anyMessage.length()>0  ) {
-      dc.drawText(center_x , txtLine3, Gfx.FONT_XTINY , JBWatchApp.anyMessage, Gfx.TEXT_JUSTIFY_CENTER);
-    }
-    if (isDebug) {  System.println("showMessage end"); }
-	}
 
   function showEvent(dc) {
 	  var eventDays=Math.round(new Time.Moment(JBWatchApp.eventDate).subtract(now).value()/Time.Gregorian.SECONDS_PER_DAY);

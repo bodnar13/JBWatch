@@ -50,11 +50,5 @@
     
     <string id="enableNightScreen">Enable Night Screen</string>
     
-    <string id="anyMessage">Any Message</string>  
-    <string id="receiveAnyMessage">Receive External Data</string>
-    <string id="messageURL">Data Provider URL</string>
-
-<!--      <string id="deviceId">DeviceId</string>  -->
- 
  
 </strings>

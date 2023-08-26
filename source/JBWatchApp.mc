@@ -40,9 +40,6 @@ class JBWatchApp extends App.AppBase {
   static var hourStyle=null;
 
   static var enableNightScreen=true;
-  static var anyMessage="";
-  static var chartData=null;
-  static var receiveAnyMessage=false;
   static var messageURL=null;
 
   static var sleepStartTime=null;
@@ -90,10 +87,6 @@ class JBWatchApp extends App.AppBase {
     
     function getServiceDelegate() {  
 		  if (delegates.size() == 0 ) {
-        if (JBWatchApp.receiveAnyMessage) {
-	   	    delegate = new JBWatchDelegate();
-          delegates.add(delegate);
-        }
         if (JBWatchApp.showSunrise) {
           positionDelegate = new JBWatchPositionDelegate();
           delegates.add(positionDelegate);
@@ -112,10 +105,6 @@ class JBWatchApp extends App.AppBase {
       if (data.get("position") != null) {
         dayLight(data.get("position"));
       }
-      if (data.get("message") != null) {
- 	      anyMessage=data.get("message");
- 	      chartData=data.get("data");
-      }
  	    Ui.requestUpdate();
     }
     
@@ -128,8 +117,6 @@ class JBWatchApp extends App.AppBase {
       if (defaultColor) {
      	  resetColors();
       } 
-      receiveAnyMessage=App.Properties.getValue("receiveAnyMessage");
-      messageURL=App.Properties.getValue("messageURL");
       eventName=Application.Properties.getValue("eventName");
       eventDate=Application.Properties.getValue("eventDate");
       showEvent=Application.Properties.getValue("showEvent");
@@ -161,9 +148,7 @@ class JBWatchApp extends App.AppBase {
       
       hourStyle=(App.Properties.getValue("hourStyle")==1 ? "dots" : "lines");
       enableNightScreen=App.Properties.getValue("enableNightScreen");
-      
-      anyMessage=App.Properties.getValue("anyMessage");
-               
+                    
     }
   
     function resetColors() {

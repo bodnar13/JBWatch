@@ -1,6 +1,5 @@
 using Toybox.System;
 using Toybox.Background;
-using Toybox.Communications;
 using Toybox.Time;
 using Toybox.WatchUi as Ui;
 using Toybox.Position;

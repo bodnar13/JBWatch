@@ -7,27 +7,6 @@
     <setting propertyKey="@Properties.eventName" title="@Strings.eventName" >
         <settingConfig type="ALPHANUMERIC" maxLength="9"  />
     </setting>
-    
-    <setting propertyKey="@Properties.receiveAnyMessage" title="@Strings.receiveAnyMessage"  >
-        <settingConfig type="boolean"   />
-    </setting>
-    
-    <setting propertyKey="@Properties.messageURL" title="@Strings.messageURL" >
-        <settingConfig type="ALPHANUMERIC" maxLength="90"  />
-    </setting>
-    
-    
-<!--     
-    <setting propertyKey="@Properties.deviceId" title="@Strings.deviceId"  >
-        <settingConfig type="ALPHANUMERIC"  maxLength="50" />
-    </setting>
- -->
-   
-   <!-- 
-    <setting propertyKey="@Properties.anyMessage" title="@Strings.anyMessage" >
-        <settingConfig type="ALPHANUMERIC" maxLength="13"  />
-    </setting>
-   -->
       
     <setting propertyKey="@Properties.eventDate" title="@Strings.eventDate" >
         <settingConfig type="DATE"  />

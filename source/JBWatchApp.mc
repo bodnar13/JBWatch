@@ -6,7 +6,7 @@ using Toybox.WatchUi as Ui;
 
 class JBWatchApp extends App.AppBase {
 
-  var isDebug = false;
+  var logLevel = 2; 
   var view = null;
   var delegate = null;
   var positionDelegate = null;
@@ -46,37 +46,42 @@ class JBWatchApp extends App.AppBase {
   static var sleepEndTime=null;
 
   static var dayLightCalc=[];
+  static var equinoxAndSolstice=[];
 
   function initialize() {
     AppBase.initialize();
     readConfig();
     calcSleepTime();
     initPosInfo();
-  	if (isDebug) {
+    equinoxAndSolstice.add(getEquinoxAndSolstice(0));
+    equinoxAndSolstice.add(getEquinoxAndSolstice(1));
+    equinoxAndSolstice.add(getEquinoxAndSolstice(2));
+    equinoxAndSolstice.add(getEquinoxAndSolstice(3));
+  	if (logLevel > 2) {
       System.println("JBWatchApp.initialize"); 
     }
   }
 
   function onStart(state) {
-    if (isDebug) {
+    if (logLevel > 2) {
       System.println("JBWatchApp.onStart");
     }
   }
 
   function onStop(state) {
-    if (isDebug) {
+    if (logLevel > 2) {
       System.println("JBWatchApp.onStop");
     }
   }
 
   function onSettingsChanged() {
-    if (isDebug) {  System.println("JBWatchApp.onSettingsChanged"); }
+    if (logLevel > 2) {  System.println("JBWatchApp.onSettingsChanged"); }
       readConfig();
         Ui.requestUpdate();
     }
 
     function getInitialView() {
-      if (isDebug) {
+      if (logLevel > 2) {
         System.println("JBWatchApp.getInitialView"); 
       }
       if (view == null ) {
@@ -92,14 +97,14 @@ class JBWatchApp extends App.AppBase {
           delegates.add(positionDelegate);
         }
       }
-      if (isDebug) {
+      if (logLevel > 2) {
         System.println("JBWatchApp.getServiceDelegate" + delegates);
       }
 		  return delegates;    
     }
     
     function onBackgroundData(data) {
- 	    if (isDebug) {
+ 	    if (logLevel > 2) {
         System.println("JBWatchApp.onBackgroundData"+data);
       }
       if (data.get("position") != null) {
@@ -171,7 +176,7 @@ class JBWatchApp extends App.AppBase {
   }
   
   static function calcSleepTime() {
-    if (isDebug) {  System.println("JBWatchApp.calcSleepTime"); }  
+    if (logLevel > 2) {  System.println("JBWatchApp.calcSleepTime"); }  
   	try {
       sleepStartTime=new Time.Moment(Time.today().value()+(JBWatchApp.sleepStart)*3600);
       var sleepHours=0;
@@ -205,19 +210,21 @@ class JBWatchApp extends App.AppBase {
         var zenith_nautical = 102;
         var zenith_astronomical = 108;
       */
-      var rising = true;
-      var dayLightSaving = 0; // included in timezone 
-      if(isDebug) {
-        System.println("Timezone: " + timezone);
-        System.println("Position :" + location);
-      }
-      var dayLightTimes = calcSunTime(rising, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
-      dayLightCalc=dayLightTimes;
+    var dayLightSaving = 0; // included in timezone 
+    if(logLevel > 2) {
+      System.println("Timezone: " + timezone);
+      System.println("Position :" + location);
+    }
+    var sunRiseTimes = calcSunTime(true, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
+    var sunSetTimes = calcSunTime(false, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
+    dayLightCalc=[];
+    dayLightCalc.add(sunRiseTimes);
+    dayLightCalc.add(sunSetTimes);
   }
 
   function calcSunTime(rising, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving) {
-    var dayLightCalcInfo = {};
-    if (isDebug) {
+    var info = {};
+    if (logLevel > 2) {
       System.println("{\ninput: {");
       System.println(
           "  rising: " + rising + "\n"
@@ -240,7 +247,7 @@ class JBWatchApp extends App.AppBase {
     var N3 = (1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3));
     var dayOfTherYear = N1 - (N2 * N3) + day - 30;
     
-    dayLightCalcInfo.put("1. dayOfTherYear",dayOfTherYear);
+    info.put("1. dayOfTherYear",dayOfTherYear);
 
     // 2. convert the longitude to hour value and calculate an approximate time (days and time)
 
@@ -252,13 +259,13 @@ class JBWatchApp extends App.AppBase {
         approxTime = dayOfTherYear + ((18 - lngHour) / 24);
     }
     
-    dayLightCalcInfo.put("2. approxTime",approxTime);
+    info.put("2. approxTime",approxTime);
 
     // 3. calculate the Sun's mean anomaly (degree)
 
     var meanAnomaly = (0.9856 * approxTime) - 3.289;
 
-    dayLightCalcInfo.put("3. meanAnomaly",meanAnomaly);
+    info.put("3. meanAnomaly",meanAnomaly);
     
     // 4. calculate the Sun's true longitude
 
@@ -269,7 +276,7 @@ class JBWatchApp extends App.AppBase {
 
     trueLongitude = toRange(trueLongitude, 360);
 
-    dayLightCalcInfo.put("4. trueLongitude",trueLongitude);
+    info.put("4. trueLongitude",trueLongitude);
 
     // 5a.calculate the Sun's right ascension
 
@@ -286,15 +293,15 @@ class JBWatchApp extends App.AppBase {
 
     rightAscension = rightAscension / 15;
 
-    dayLightCalcInfo.put("5. rightAscension",rightAscension);
+    info.put("5. rightAscension",rightAscension);
 
     // 6. calculate the Sun's declination
 
     var sinDec = 0.39782 * Math.sin(dToR(trueLongitude));
     var cosDec = Math.cos(Math.asin(sinDec));
 
-    dayLightCalcInfo.put("6. sinDec",sinDec);
-    dayLightCalcInfo.put("6. cosDec",cosDec);
+    info.put("6. sinDec",sinDec);
+    info.put("6. cosDec",cosDec);
 
     // 7a.calculate the Sun's local hour angle
 
@@ -318,13 +325,13 @@ class JBWatchApp extends App.AppBase {
 
     hourAngle = hourAngle / 15;
 
-    dayLightCalcInfo.put("7. hourAngle",hourAngle);
+    info.put("7. hourAngle",hourAngle);
 
     // 8. calculate local mean time of rising / setting
 
     var localMeanTime = hourAngle + rightAscension - (0.06571 * approxTime) - 6.622;
 
-    dayLightCalcInfo.put("8. localMeanTime",localMeanTime);
+    info.put("8. localMeanTime",localMeanTime);
 
     //9. adjust back to UTC
 
@@ -332,7 +339,7 @@ class JBWatchApp extends App.AppBase {
     //NOTE: UT potentially needs to be adjusted into the range[0, 24) by adding / subtracting 24
     UTC = toRange(UTC, 24);
   
-    dayLightCalcInfo.put("9. UTC",UTC);
+    info.put("9. UTC",UTC);
 
     // 10. convert UT value to local time zone of latitude / longitude
 
@@ -341,23 +348,17 @@ class JBWatchApp extends App.AppBase {
     var localMinutes = Math.floor((localTime - localHour) * 60).toLong();
     var localClockTime = localHour + localMinutes.toFloat() / 100;
 
-    dayLightCalcInfo.put("10. localClockTime",localClockTime);
+    info.put("10. localClockTime",localClockTime);
     
-    if (isDebug) {   
-      var keys = dayLightCalcInfo.keys();
+    if (logLevel > 2) {   
+      var keys = info.keys();
       System.println("calc : {");
       for ( var i =0 ; i<keys.size(); i ++) {
-        System.println("  " + keys[i] + ":" + dayLightCalcInfo.get(keys[i]));
+        System.println("  " + keys[i] + ":" + info.get(keys[i]));
       }
       System.println("  }\n}");    
     }
-
-    if (rising) {
-        var sunSetAt = calcSunTime(false, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
-        return [[localHour,localMinutes],sunSetAt] ; // { sunRise: clockTime, sunSet: sunSetAt }
-    } else {
-        return [localHour,localMinutes];
-    }
+    return [localHour,localMinutes];
   }
 
   function dToR(degree) {
@@ -374,4 +375,136 @@ class JBWatchApp extends App.AppBase {
   function initPosInfo(){
     dayLight(Position.getInfo().position.toDegrees());
   }
+
+  function getEquinoxAndSolstice(eventNr) {
+    var info = {};
+    var thisYear = Time.Gregorian.info(Time.now(),Time.FORMAT_SHORT).year;
+    var Y = (thisYear-2000)/1000.0;
+  
+    var JDEMarch  = 2451623.80984d + 365242.37404 * Y + 0.05169 * Math.pow(Y, 2) - 0.00411 * Math.pow(Y, 3) - 0.00057 * Math.pow(Y, 4);
+    var JDEJune   = 2451716.56767d + 365241.62603 * Y + 0.00325 * Math.pow(Y, 2) + 0.00888 * Math.pow(Y, 3) - 0.00030 * Math.pow(Y, 4);
+    var JDESept   = 2451810.21715d + 365242.01767 * Y - 0.11575 * Math.pow(Y, 2) + 0.00337 * Math.pow(Y, 3) + 0.00078 * Math.pow(Y, 4);
+    var JDEDec    = 2451900.05952d + 365242.74049 * Y - 0.06223 * Math.pow(Y, 2) - 0.00823 * Math.pow(Y, 3) + 0.00032 * Math.pow(Y, 4);
+    var eventJDE = [JDEMarch, JDEJune, JDESept, JDEDec];
+
+    var JDE0 = eventJDE[eventNr];
+ 
+    var T = (JDE0 - 2451545.0)/36525;
+    var W = 35999.373 * T - 2.47;
+    var deltaLambda = 1 + 0.0334d * Math.cos(dToR(W)) + 0.0007 * Math.cos(dToR(2 * W));
+
+    var sElements=[
+      [485, 324.96, 1934.136], 
+      [203, 337.23, 32964.467],
+      [199, 342.08, 20.186],
+      [182, 27.85, 445267.112],
+      [156, 73.14, 45036.886],
+      [136, 171.52, 22518.443],
+      [77, 222.54, 65928.934],
+      [74, 296.72, 3034.906],
+      [70, 243.58, 9037.513],
+      [58, 119.81, 33718.147],
+      [52, 297.17, 150.678],
+      [50, 21.02, 2281.226],
+      [45, 247.54, 29929.562],
+      [44, 325.15, 31555.956],
+      [29, 60.93, 4443.417],
+      [18, 155.12, 67555.328],
+      [17, 288.79, 4562,452],
+      [16, 198.04, 62894.029],
+      [14, 199.76, 31436.921],
+      [12, 95.39, 14577.848],
+      [12, 287.11, 31931.756],
+      [12, 320.81, 34777.259],
+      [9, 227.73, 1222.114],
+      [8, 15.45, 16859.074]
+    ];
+
+    var S=0;
+    for (var i = 0; i < sElements.size(); i++) {
+       S = S + sElements[i][0] * Math.cos(dToR(sElements[i][1] + sElements[i][2] * T));
+    }
+    S = Math.floor(S);
+
+    var JDE = JDE0 + 0.00001d * S / deltaLambda;
+    var equinoxOrSolstice=jdeToDate(JDE);
+    if (logLevel > 2) {
+				info.put("Y", Y);
+				info.put("JDE0",JDE0);
+				info.put("JDE", JDE);
+				info.put("T", T);
+        info.put("W", W);
+				info.put("deltaLambda", deltaLambda);
+				info.put("S", S);
+				info.put("equinoxOrSolstice", equinoxOrSolstice);
+        printInfo("equinoxOrSolstice",info);
+    }
+    return equinoxOrSolstice;
+  }
+
+  function jdeToDate(jde) {
+	  // jde = 2436116.31;
+	  // 1957 October 4.81.
+    var info = {};
+	  var za = jde + 0.5d;
+	  var Z = Math.floor(za);
+	  var F = za - Z;
+	  var A;
+	  if (Z < 2299161) {
+		  A = Z;
+	  } else {
+		    var alfa = Math.floor((Z - 1867216.25d)/36524.25);
+		    A = Z + 1 + alfa - Math.floor(alfa/4);
+	  }
+	  var B = A + 1524;
+	  var C = Math.floor((B-122.1)/365.25);
+	  var D = Math.floor(365.25 * C);
+	  var E = Math.floor((B - D) / 30.6001);
+	  var day = B - D - Math.floor(30.6001 * E) + F;
+    var hour = (day - Math.floor(day)) * 24; 
+    var minute = (hour - Math.floor(hour)) * 60;
+	  var month;
+	  if (E < 14) {
+		  month = E - 1;
+	  } else {
+		  month = E - 13;
+	  }
+	  var year;
+	  if ( month > 2) {
+		  year = C - 4716;
+	  } else {
+		  year = C - 4715;
+	  }
+    month = month.toNumber();
+    day = day.toNumber();
+    hour = hour.toNumber();
+    minute = minute.toNumber();
+
+    if (logLevel > 2) {
+  	    info.put("jde", jde);
+		    info.put("A", A);
+		    info.put("B", B);
+		    info.put("C" , C);
+		    info.put("D" , D);
+		    info.put("E", E);		
+		    info.put("F" , F);
+	 	    info.put("Z", Z);
+        info.put("year", year);
+		    info.put("month", month);
+		    info.put("day", day);
+        info.put("minute", minute);
+	    printInfo("jdeToDate",info); 
+    }
+	  return [month,day,hour,minute];
+  }
+
+  function printInfo(tag,info){
+    var keys = info.keys();
+      System.println(tag + ": {");
+      for ( var i =0 ; i<keys.size(); i ++) {
+        System.println("  " + keys[i] + ":" + info.get(keys[i]));
+      }
+      System.println("}\n}"); 
+  }
+
 }

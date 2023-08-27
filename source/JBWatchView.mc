@@ -158,7 +158,7 @@ class JBWatchView extends Ui.WatchFace {
     dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
     mo=0;
     var mox=Time.Gregorian.moment({:month =>1, :day => 1}).subtract(now).value()/86400;         
-    for (var i = (Math.PI/180)*-240; i <(Math.PI/180)*120 ; i += Math.PI/183 ) {
+    for (var i = (Math.PI/180)*-270; i <(Math.PI/180)*90 ; i += Math.PI/183 ) {
       var x=center_x+Math.cos(i)*(month_ring);
       var y=center_y+Math.sin(i)*(month_ring);
       var xh=center_x+Math.cos(i)*(month_ring-month_hand);
@@ -168,7 +168,7 @@ class JBWatchView extends Ui.WatchFace {
         dc.setColor(JBWatchApp.handColor, JBWatchApp.handColor);
         dc.drawLine(x,y,xh,yh);
         dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
-        dc.drawArc(center_x, center_y, month_ring, Gfx.ARC_CLOCKWISE, 240, 360-((i/Math.PI)*180) );
+        dc.drawArc(center_x, center_y, month_ring, Gfx.ARC_CLOCKWISE, 270, 359-((i/Math.PI)*180) );
         dc.setPenWidth(1);
       }
       mo++;
@@ -276,18 +276,23 @@ function hoursFace(today,dc) {
       System.println("seasons start"); 
     }
     dc.setPenWidth(season_ring_width);
+    var startSpring = - 90 - ((JBWatchApp.equinoxAndSolstice[0][0] -1 ) / 12d * 360 + JBWatchApp.equinoxAndSolstice[0][1] / 365d * 360);
+    var startSummer = - 90 - ((JBWatchApp.equinoxAndSolstice[1][0] -1 ) / 12d * 360 + JBWatchApp.equinoxAndSolstice[1][1] / 365d * 360);
+    var startFall   = - 90 - ((JBWatchApp.equinoxAndSolstice[2][0] -1 ) / 12d * 360 + JBWatchApp.equinoxAndSolstice[2][1] / 365d * 360);
+    var startWinter = - 90 - ((JBWatchApp.equinoxAndSolstice[3][0] -1 ) / 12d * 360 + JBWatchApp.equinoxAndSolstice[3][1] / 365d * 360);
+
     // Winter
     dc.setColor(JBWatchApp.winterColor,JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, 270, 180 );
+    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startWinter, startSpring );
 		// Spring
 		dc.setColor(JBWatchApp.springColor,JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, 180, 90 );
+    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startSpring, startSummer );
 		// Summer         
     dc.setColor(JBWatchApp.summerColor,JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, 90, 0 );
+    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startSummer, startFall);
 		// Fall         
     dc.setColor(JBWatchApp.autumnColor,JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, 360, 270 );
+    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startFall, startWinter);
          
     dc.setColor(JBWatchApp.faceForegroundColor,JBWatchApp.faceBackgroundColor);
     dc.setPenWidth(1);

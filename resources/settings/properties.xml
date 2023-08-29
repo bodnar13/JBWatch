@@ -6,25 +6,25 @@
     <property id="sleepStart" type="number" >22</property>
     <property id="sleepEnd"   type="number" >6</property>
     <property id="defaultColor"  type="boolean" >false</property>
-	<property id="faceBackgroundColor" type="number" >0x000000</property>
+    <property id="faceBackgroundColor" type="number" >0x000000</property>
     <property id="faceForegroundColor" type="number" >0xFFFFFF</property>
-	<property id="ringColor" type="number" >0xFFFFFF</property>
-	<property id="handColor" type="number" >0xFFFFFF</property>
-	<property id="hourDotsColor" type="number" >0xFFFFFF</property>
-	<property id="monthDotsColor" type="number" >0xFFFFFF</property>
-	<property id="sleepColor" type="number" >0xFF0000</property>
-	<property id="springColor" type="number" >0x00FF00</property>
-	<property id="summerColor" type="number" >0xFF0000</property>
-	<property id="autumnColor" type="number" >0xFF5500</property>
-	<property id="winterColor" type="number" >0xFFFFFF</property>
-	<property id="showRings"   type="boolean" >true</property>
-	<property id="showDate"    type="boolean" >true</property>
-	<property id="showMinutes"  type="boolean" >true</property>
-	<property id="showMonth"    type="boolean" >true</property>
-	<property id="showSunrise"   type="boolean" >true</property>
-	<property id="showSeason"   type="boolean" >true</property>
-	<property id="hourStyle"   type="number" >1</property>
-	<property id="enableNightScreen"   type="boolean" >true</property>
+    <property id="ringColor" type="number" >0xFFFFFF</property>
+    <property id="handColor" type="number" >0xFFFFFF</property>
+    <property id="hourDotsColor" type="number" >0xFFFFFF</property>
+    <property id="monthDotsColor" type="number" >0xFFFFFF</property>
+    <property id="sleepColor" type="number" >0xFF0000</property>
+    <property id="springColor" type="number" >0x00FF00</property>
+    <property id="summerColor" type="number" >0xFF0000</property>
+    <property id="autumnColor" type="number" >0xFF5500</property>
+    <property id="winterColor" type="number" >0xFFFFFF</property>
+    <property id="showRings"   type="boolean" >true</property>
+    <property id="showDate"    type="boolean" >true</property>
+    <property id="showMinutes"  type="boolean" >true</property>
+    <property id="showMonth"    type="boolean" >true</property>
+    <property id="showSunrise"   type="boolean" >true</property>
+    <property id="showSeason"   type="boolean" >true</property>
+    <property id="hourStyle"   type="number" >1</property>
+    <property id="enableNightScreen"   type="boolean" >true</property>
  
  
 </properties>

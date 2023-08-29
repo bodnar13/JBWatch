@@ -1,53 +1,53 @@
 <strings>
-    <string id="AppName">JBWatch</string>
+  <string id="AppName">JBWatch</string>
     
-    <string id="showEvent">Show Event</string> 
-    <string id="eventName">Event Name</string>
-    <string id="eventDate">Event Date</string>
-    <string id="daysTitle">d.</string>
+  <string id="showEvent">Show Event</string> 
+  <string id="eventName">Event Name</string>
+  <string id="eventDate">Event Date</string>
+  <string id="daysTitle">d.</string>
     
-    <string id="sleepStart">Sleep time (Hour)</string>   
-    <string id="sleepEnd">Wake time (Hour)</string>      
+  <string id="sleepStart">Sleep time (Hour)</string>   
+  <string id="sleepEnd">Wake time (Hour)</string>      
     
-    <string id="defaultColor">Default color</string>
-	<string id="faceBackgroundColor">Background Color</string>     
-    <string id="faceForegroundColor">Foreground Color</string>
-    <string id="ringColor">Ring Color</string>     
-    <string id="handColor">Hand Color</string>
-    <string id="hourDotsColor">Hour Dots Color</string>
-    <string id="monthDotsColor">Month Dots Color</string>
-    <string id="sleepColor">Sleep Color</string>
-    <string id="springColor">Spring Color</string>
-    <string id="summerColor">Summer Color</string>
-    <string id="autumnColor">Autumn Color</string>
-    <string id="winterColor">Winter Color</string>
+  <string id="defaultColor">Default color</string>
+  <string id="faceBackgroundColor">Background Color</string>     
+  <string id="faceForegroundColor">Foreground Color</string>
+  <string id="ringColor">Ring Color</string>     
+  <string id="handColor">Hand Color</string>
+  <string id="hourDotsColor">Hour Dots Color</string>
+  <string id="monthDotsColor">Month Dots Color</string>
+  <string id="sleepColor">Sleep Color</string>
+  <string id="springColor">Spring Color</string>
+  <string id="summerColor">Summer Color</string>
+  <string id="autumnColor">Autumn Color</string>
+  <string id="winterColor">Winter Color</string>
         
-    <string id="white">White</string>    
-	<string id="lightGray">Light Gray</string>
-	<string id="darkGray">Dark Gray</string>
-	<string id="black">Black</string>
-	<string id="red">Red</string>
-	<string id="darkRed">Dark Red</string>
-	<string id="orange">Orange</string>
-	<string id="yellow">Yellow</string>
-	<string id="green">Green</string>
-	<string id="darkGreen">Dark Green</string>
-	<string id="blue">Blue</string>
-	<string id="darkBlue">Dark Blue</string>
-	<string id="pink">Pink</string>
-	<string id="transparent">Transparent</string>
+  <string id="white">White</string>    
+  <string id="lightGray">Light Gray</string>
+  <string id="darkGray">Dark Gray</string>
+  <string id="black">Black</string>
+  <string id="red">Red</string>
+  <string id="darkRed">Dark Red</string>
+  <string id="orange">Orange</string>
+  <string id="yellow">Yellow</string>
+  <string id="green">Green</string>
+  <string id="darkGreen">Dark Green</string>
+  <string id="blue">Blue</string>
+  <string id="darkBlue">Dark Blue</string>
+  <string id="pink">Pink</string>
+  <string id="transparent">Transparent</string>
 
-    <string id="showRings">Show rings</string>
-    <string id="showDate">Show Date</string>
-    <string id="showMinutes">Show Minutes</string>
-    <string id="showMonth">Show Month</string>
-    <string id="showSeason">Show Season</string>
-    <string id="showSunrise">Show Sunrise</string>
+  <string id="showRings">Show rings</string>
+  <string id="showDate">Show Date</string>
+  <string id="showMinutes">Show Minutes</string>
+  <string id="showMonth">Show Month</string>
+  <string id="showSeason">Show Season</string>
+  <string id="showSunrise">Show Sunrise</string>
     
-    <string id="hourStyle">Hour Style</string>
-    <string id="dots">Dots</string>
-    <string id="lines">Lines</string>
+  <string id="hourStyle">Hour Style</string>
+  <string id="dots">Dots</string>
+  <string id="lines">Lines</string>
     
-    <string id="enableNightScreen">Enable Night Screen</string>
+  <string id="enableNightScreen">Enable Night Screen</string>
     
 </strings>

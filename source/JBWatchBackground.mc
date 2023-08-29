@@ -4,18 +4,16 @@ using Toybox.Graphics as Gfx;
 
 class JBWatchBackground extends Ui.Drawable {
 
-    function initialize() {
-        var dictionary = {
-            :identifier => "Background"
-        };
+  function initialize() {
+    var dictionary = {
+      :identifier => "Background"
+    };
+    Drawable.initialize(dictionary);
+  }
 
-        Drawable.initialize(dictionary);
-    }
-
-    function draw(dc) {
-      dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
-      dc.clear();
-        
-    }
+  function draw(dc) {
+    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.clear();    
+  }
 
 }

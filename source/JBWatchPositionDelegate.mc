@@ -14,16 +14,10 @@ var connected=false;
   function initialize() {
     ServiceDelegate.initialize();
     device = System.getDeviceSettings();
-    Background.registerForTemporalEvent(new Time.Duration(21600));
-     if (logLevel > 2) {
-      System.println("Position ServiceDelegate.initialize"); 
-    }
+    Background.registerForTemporalEvent(new Time.Duration(600));
   }
 
   function onTemporalEvent() {
-    if (logLevel > 2) { 
-      System.println("Position onTemporalEvent"); 
-    }
     if (JBWatchApp.showSunrise  ) {
       var data = {
         "position" => Position.getInfo().position.toDegrees()
@@ -32,17 +26,14 @@ var connected=false;
        
     }
   }
+
   
   function onWakeTime() {
-    if (logLevel > 2) {
-      System.println("Position onWakeTime"); 
-    }
+
   }
   
   function onActivityCompleted(activity) {
-    if (logLevel > 2) {
-      System.println("Position activity:"+activity);
-    }
+
   }
 
     

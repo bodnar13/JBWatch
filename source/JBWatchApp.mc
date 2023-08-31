@@ -6,13 +6,14 @@ using Toybox.WatchUi as Ui;
 
 class JBWatchApp extends App.AppBase {
 
+  const device = System.getDeviceSettings();
+  const monkeyVersion = Lang.format("$1$.$2$$3$", device.monkeyVersion).toFloat();
+
   var logLevel = 2; 
   var view = null;
-  var delegate = null;
-  var positionDelegate = null;
-  var delegates= [];
   var menu = null;
 
+  // Configuration
   static var eventName = null;
   static var eventDate = null;
   static var showEvent = false;
@@ -40,76 +41,52 @@ class JBWatchApp extends App.AppBase {
   static var hourStyle = null;
 
   static var enableNightScreen = true;
-  static var messageURL = null;
 
   static var sleepStartTime = null;
   static var sleepEndTime = null;
 
-  static var dayLightCalc = [];
-  static var equinoxAndSolstice = [];
-  static var anyMessage = null;
+  var delegate = [];
+
+  // Astronomy and other data
+  var astroData = null;
 
   function initialize() {
     AppBase.initialize();
+    self.astroData = new AstroData();
     readConfig();
     calcSleepTime();
-    initPosInfo();
-    equinoxAndSolstice.add(getEquinoxAndSolstice(0));
-    equinoxAndSolstice.add(getEquinoxAndSolstice(1));
-    equinoxAndSolstice.add(getEquinoxAndSolstice(2));
-    equinoxAndSolstice.add(getEquinoxAndSolstice(3));
-    if (logLevel > 2) {
-      System.println("JBWatchApp.initialize"); 
-    }
   }
-
+  
   function onStart(state) {
-    if (logLevel > 2) {
-      System.println("JBWatchApp.onStart");
-    }
+      calcAstroData(Position.getInfo().position.toDegrees());
   }
 
   function onStop(state) {
-    if (logLevel > 2) {
-      System.println("JBWatchApp.onStop");
-    }
   }
 
   function onSettingsChanged() {
-    if (logLevel > 2) {  System.println("JBWatchApp.onSettingsChanged"); }
-      readConfig();
-        Ui.requestUpdate();
-    }
+    readConfig();
+    Ui.requestUpdate();
+  }
 
     function getInitialView() {
-      if (logLevel > 2) {
-        System.println("JBWatchApp.getInitialView"); 
-      }
       if (view == null ) {
-        view=new JBWatchView();
-       }
-       return [view];
+        view=new JBWatchView(astroData);
+      }
+      return [view];
     }
     
-    function getServiceDelegate() {  
-      if (delegates.size() == 0 ) {
-        if (JBWatchApp.showSunrise) {
-          positionDelegate = new JBWatchPositionDelegate();
-          delegates.add(positionDelegate);
-        }
+    function getServiceDelegate() { 
+      if (JBWatchApp.showSunrise && self.delegate.size() == 0) {
+          self.delegate.add( new JBWatchPositionDelegate() );
       }
-      if (logLevel > 2) {
-        System.println("JBWatchApp.getServiceDelegate" + delegates);
-      }
-      return delegates;    
+      return self.delegate;
     }
     
     function onBackgroundData(data) {
-       if (logLevel > 2) {
-        System.println("JBWatchApp.onBackgroundData"+data);
-      }
       if (data.get("position") != null) {
-        dayLight(data.get("position"));
+          calcAstroData(data.get("position"));
+          self.view.astroData = self.astroData;
       }
        Ui.requestUpdate();
     }
@@ -159,26 +136,23 @@ class JBWatchApp extends App.AppBase {
     function resetColors() {
       try {
         App.Properties.setValue("faceForegroundColor", 0xFFFFFF);
-         App.Properties.setValue("faceBackgroundColor", 0x000000);
-         App.Properties.setValue("ringColor", 0xFFFFFF);
-         App.Properties.setValue("handColor", 0xFFFFFF);
-         App.Properties.setValue("hourDotsColor", 0xFFFFFF);
-         App.Properties.setValue("monthDotsColor", 0xFFFFFF);
-         App.Properties.setValue("sleepColor", 0xFF0000);
-       
-         App.Properties.setValue("springColor", 0x00FF00);
-         App.Properties.setValue("summerColor", 0xFF0000);
-         App.Properties.setValue("autumnColor", 0xFF5500);
-         App.Properties.setValue("winterColor", 0xFFFFFF);
+        App.Properties.setValue("faceBackgroundColor", 0x000000);
+        App.Properties.setValue("ringColor", 0xFFFFFF);
+        App.Properties.setValue("handColor", 0xFFFFFF);
+        App.Properties.setValue("hourDotsColor", 0xFFFFFF);
+        App.Properties.setValue("monthDotsColor", 0xFFFFFF);
+        App.Properties.setValue("sleepColor", 0xFF0000);
+      
+        App.Properties.setValue("springColor", 0x00FF00);
+        App.Properties.setValue("summerColor", 0xFF0000);
+        App.Properties.setValue("autumnColor", 0xFF5500);
+        App.Properties.setValue("winterColor", 0xFFFFFF);
       } catch (ex) {
       } 
                                
   }
   
   static function calcSleepTime() {
-    if (logLevel > 2) {  
-      System.println("JBWatchApp.calcSleepTime"); 
-    }  
     try {
       sleepStartTime = new Time.Moment(Time.today().value() + (JBWatchApp.sleepStart) * 3600);
       var sleepHours = 0;
@@ -198,14 +172,20 @@ class JBWatchApp extends App.AppBase {
       }
         
   }
+ 
+   /**
+   * @param {array} location as [latitude,longitude]
+   * @param {Dictionary} dateNow
+   * @return {array}  [[sunRiseLocalHour, sunRiseLocalMinutes], [sunSetLocalHour, sunSetLocalMinutes]]
+   */
+  function dayLight(location,dateNow) {
+    var year = dateNow.get("year");
+    var month = dateNow.get("month");
+    var day = dateNow.get("day");
+    var timezone = dateNow.get("timezone");
 
-  function dayLight(location) {
-    var year = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).year;
-    var month = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).month;
-    var day = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).day;
-    var timezone = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).hour - Time.Gregorian.utcInfo(Time.now(), Time.FORMAT_SHORT).hour;
-    var latitude = location[0];
-    var longitude = location[1];
+    var latitude = location[:latitude];
+    var longitude = location[:longitude];
     var zenith = 90.833333;
       /* other options
         var zenith_civil = 96;
@@ -213,34 +193,13 @@ class JBWatchApp extends App.AppBase {
         var zenith_astronomical = 108;
       */
     var dayLightSaving = 0; // included in timezone 
-    if(logLevel > 2) {
-      System.println("Timezone: " + timezone);
-      System.println("Position :" + location);
-    }
     var sunRiseTimes = calcSunTime(true, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
     var sunSetTimes = calcSunTime(false, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving);
-    dayLightCalc = [];
-    dayLightCalc.add(sunRiseTimes);
-    dayLightCalc.add(sunSetTimes);
+    return new SunRiseSunSet({:sunRise => sunRiseTimes, :sunSet => sunSetTimes});
+  
   }
 
   function calcSunTime(rising, year, month, day, latitude, longitude, zenith, timezone, dayLightSaving) {
-    var info = {};
-    if (logLevel > 2) {
-      System.println("{\ninput: {");
-      System.println(
-          "  rising: " + rising + "\n"
-          + "  year: " + year + "\n"
-          + "  month: " + month + "\n"
-          + "  day: " + day + "\n"
-          + "  latitude: " + latitude + "\n"
-          + "  longitude: " + longitude + "\n"
-          + "  zenith: " + zenith + "\n"
-          + "  timezone: " + timezone + "\n"
-          + "  dayLightSaving: " + dayLightSaving + "\n"
-      );
-      System.println("}");
-    }
 
     // 1. calculate the day of the year
 
@@ -249,8 +208,6 @@ class JBWatchApp extends App.AppBase {
     var N3 = (1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3));
     var dayOfTherYear = N1 - (N2 * N3) + day - 30;
     
-    info.put("1. dayOfTherYear", dayOfTherYear);
-
     // 2. convert the longitude to hour value and calculate an approximate time (days and time)
 
     var lngHour = longitude / 15;
@@ -261,13 +218,10 @@ class JBWatchApp extends App.AppBase {
         approxTime = dayOfTherYear + ((18 - lngHour) / 24);
     }
     
-    info.put("2. approxTime",approxTime);
 
     // 3. calculate the Sun's mean anomaly (degree)
 
     var meanAnomaly = (0.9856 * approxTime) - 3.289;
-
-    info.put("3. meanAnomaly", meanAnomaly);
     
     // 4. calculate the Sun's true longitude
 
@@ -277,8 +231,6 @@ class JBWatchApp extends App.AppBase {
         + 282.634;
 
     trueLongitude = toRange(trueLongitude, 360);
-
-    info.put("4. trueLongitude", trueLongitude);
 
     // 5a.calculate the Sun's right ascension
 
@@ -295,15 +247,10 @@ class JBWatchApp extends App.AppBase {
 
     rightAscension = rightAscension / 15;
 
-    info.put("5. rightAscension", rightAscension);
-
     // 6. calculate the Sun's declination
 
     var sinDec = 0.39782 * Math.sin( dToR(trueLongitude) );
     var cosDec = Math.cos(Math.asin(sinDec));
-
-    info.put("6. sinDec", sinDec);
-    info.put("6. cosDec", cosDec);
 
     // 7a.calculate the Sun's local hour angle
 
@@ -327,40 +274,23 @@ class JBWatchApp extends App.AppBase {
 
     hourAngle = hourAngle / 15;
 
-    info.put("7. hourAngle", hourAngle);
-
     // 8. calculate local mean time of rising / setting
 
     var localMeanTime = hourAngle + rightAscension - (0.06571 * approxTime) - 6.622;
-
-    info.put("8. localMeanTime", localMeanTime);
 
     //9. adjust back to UTC
 
     var UTC = localMeanTime - lngHour;
     //NOTE: UT potentially needs to be adjusted into the range[0, 24) by adding / subtracting 24
     UTC = toRange(UTC, 24);
-  
-    info.put("9. UTC", UTC);
 
     // 10. convert UT value to local time zone of latitude / longitude
 
     var localTime = UTC + timezone + dayLightSaving;
     var localHour = Math.floor(localTime).toLong();
     var localMinutes = Math.floor((localTime - localHour) * 60).toLong();
-    var localClockTime = localHour + localMinutes.toFloat() / 100;
-
-    info.put("10. localClockTime", localClockTime);
     
-    if (logLevel > 2) {   
-      var keys = info.keys();
-      System.println("calc : {");
-      for ( var i = 0 ; i < keys.size(); i ++) {
-        System.println("  " + keys[i] + ":" + info.get(keys[i]));
-      }
-      System.println("  }\n}");    
-    }
-    return [localHour, localMinutes];
+    return new DayTime({:hour => localHour, :minute => localMinutes});
   }
 
   function dToR(degree) {
@@ -374,14 +304,13 @@ class JBWatchApp extends App.AppBase {
     if (val > maxVal) { val -= maxVal; }
     return val;
   }
-  function initPosInfo(){
-    dayLight( Position.getInfo().position.toDegrees() );
-  }
 
-  function getEquinoxAndSolstice(eventNr) {
-    var info = {};
-    var thisYear = Time.Gregorian.info( Time.now(), Time.FORMAT_SHORT).year;
-    var Y = (thisYear - 2000) / 1000.0;
+
+  function getEquinoxOrSolstice(eventNr,dateNow) {
+    
+    var year = dateNow.get("year");
+
+    var Y = (year - 2000) / 1000.0;
   
     var JDEMarch  = 2451623.80984d + 365242.37404 * Y + 0.05169 * Math.pow(Y, 2) - 0.00411 * Math.pow(Y, 3) - 0.00057 * Math.pow(Y, 4);
     var JDEJune   = 2451716.56767d + 365241.62603 * Y + 0.00325 * Math.pow(Y, 2) + 0.00888 * Math.pow(Y, 3) - 0.00030 * Math.pow(Y, 4);
@@ -430,24 +359,13 @@ class JBWatchApp extends App.AppBase {
 
     var JDE = JDE0 + 0.00001d * S / deltaLambda;
     var equinoxOrSolstice=jdeToDate(JDE);
-    if (logLevel > 2) {
-      info.put("Y", Y);
-      info.put("JDE0", JDE0);
-      info.put("JDE", JDE);
-      info.put("T", T);
-      info.put("W", W);
-      info.put("deltaLambda", deltaLambda);
-      info.put("S", S);
-      info.put("equinoxOrSolstice", equinoxOrSolstice);
-      printInfo("equinoxOrSolstice", info);
-    }
+    
     return equinoxOrSolstice;
   }
 
   function jdeToDate(jde) {
     // jde = 2436116.31;
     // 1957 October 4.81.
-    var info = {};
     var za = jde + 0.5d;
     var Z = Math.floor(za);
     var F = za - Z;
@@ -477,36 +395,147 @@ class JBWatchApp extends App.AppBase {
     } else {
       year = C - 4715;
     }
+    year = year.toNumber();
     month = month.toNumber();
     day = day.toNumber();
     hour = hour.toNumber();
     minute = minute.toNumber();
 
-    if (logLevel > 2) {
-        info.put("jde", jde);
-        info.put("A", A);
-        info.put("B", B);
-        info.put("C" , C);
-        info.put("D" , D);
-        info.put("E", E);    
-        info.put("F" , F);
-        info.put("Z", Z);
-        info.put("year", year);
-        info.put("month", month);
-        info.put("day", day);
-        info.put("minute", minute);
-        printInfo("jdeToDate",info); 
-    }
-    return [month, day, hour, minute];
+    return new DateAndTime({ :year => year, :month => month, :day => day, :hour => hour, :minute => minute});
   }
 
-  function printInfo(tag, info){
-    var keys = info.keys();
-    System.println(tag + ": {");
-    for ( var i =0 ; i<keys.size(); i ++) {
-      System.println("  " + keys[i] + ":" + info.get(keys[i]));
+  function getDateFromTime(moment) {
+    var gregorianInfo = Time.Gregorian.info(moment, Time.FORMAT_SHORT);
+    var year = gregorianInfo.year;
+    var month = gregorianInfo.month;
+    var day = gregorianInfo.day;
+    var hour = gregorianInfo.hour;
+    var minute = gregorianInfo.min;
+    var dst = System.getClockTime().dst;
+    var timezone = Time.Gregorian.info(moment, Time.FORMAT_SHORT).hour - Time.Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
+    if (monkeyVersion < 3.3) {
+      if ( astroData.springEquinox  != null && astroData.summerSolstice != null && astroData.fallEquinox != null || astroData.winterSolstice != null) {  // If has season data
+        if (dst > 0) {    // Summer Time DST
+          if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) {  // winter time in summer
+            timezone++;
+//            System.println("Winter month: " + month + " in summer (" + astroData.equinoxAndSolstice[0][1] + "-" + astroData.equinoxAndSolstice[3][1] + ")  at: " + Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).month);
+          }
+        } else {  // Winter Time
+          if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) { // summer time in winter
+            timezone--;
+//            System.println("Summer month: " + month + " in winter (" + astroData.equinoxAndSolstice[0][1] + "-" + astroData.equinoxAndSolstice[3][1] + ")  at: " + Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).month);
+          }            
+        }
+      }
     }
-    System.println("}\n}"); 
+//    System.println(" dst: " + System.getClockTime().dst);
+    return { "timezone" => timezone, "year" => year, "month" => month, "day" => day, "hour" => hour, "minute" => minute};
+  }
+
+  /**
+  *   Calculate 
+  *   summerSolsticeDaylight
+  *   winterSolsticeDaylight
+  */
+  function getSolsticeSunriseSunset() {
+    var dateSummer = getDateFromTime(Time.Gregorian.moment({
+        :year => astroData.summerSolstice.year,
+        :month => astroData.summerSolstice.month,
+        :day => astroData.summerSolstice.day,
+        :hour => astroData.summerSolstice.hour,
+        :minute => astroData.summerSolstice.minute
+        }
+      )
+    );
+    var dateWinter = getDateFromTime(Time.Gregorian.moment({
+        :year => astroData.winterSolstice.year,
+        :month => astroData.winterSolstice.month,
+        :day => astroData.winterSolstice.day,
+        :hour => astroData.winterSolstice.hour,
+        :minute => astroData.winterSolstice.minute
+        }
+      )
+    );
+    
+    // JBWatchApp.anyMessage = "S:" + dateSummer.get("timezone") + "W:" + dateWinter.get("timezone") + "M:" + dateWinter.get("month") + "D:" + dateWinter.get("day");
+    astroData.summerSolsticeDaylight = dayLight(astroData.location,dateSummer);
+    astroData.winterSolsticeDaylight = dayLight(astroData.location,dateWinter);
+  }
+
+  function calcAstroData(location) {
+    self.astroData = new AstroData();
+    self.astroData.setLocation(location);
+    var dateNow = getDateFromTime(Time.now());
+    // sunrise sunset now
+    self.astroData.dayLight = dayLight( self.astroData.location , dateNow);
+    // seasons starts
+    self.astroData.springEquinox = getEquinoxOrSolstice(0,dateNow);
+    self.astroData.summerSolstice = getEquinoxOrSolstice(1,dateNow);
+    self.astroData.fallEquinox = getEquinoxOrSolstice(2,dateNow);
+    self.astroData.winterSolstice = getEquinoxOrSolstice(3,dateNow);
+    // sunrise sunset on season starts
+    getSolsticeSunriseSunset();
+  }
+
+}
+
+(:background)
+class DayTime {
+  public var hour = null;
+  public var minute = null;
+  function initialize(options) {
+    self.hour = options[:hour];
+    self.minute = options[:minute];
+  }
+}
+
+(:background)
+class DateAndTime {
+  public var year = null;
+  public var month = null;
+  public var day = null;
+  public var hour = null;
+  public var minute = null;
+
+  function initialize(options) {
+    self.year = options[:year];
+    self.month = options[:month];
+    self.day = options[:day];
+    self.hour = options[:hour];
+    self.minute = options[:minute];
+  }
+}
+
+(:background)
+class SunRiseSunSet {
+  public var sunRise as DayTime = null;
+  public var sunSet as DayTime= null;
+  function initialize(options) {
+    self.sunRise = options[:sunRise];
+    self.sunSet = options[:sunSet];
+  }
+
+}
+
+(:background)
+class AstroData {
+  public var location = null;
+  public var dayLight as SunRiseSunSet = null;
+  
+  public var springEquinox as DateAndTime = null;
+  public var summerSolstice as DateAndTime = null;
+  public var fallEquinox as DateAndTime = null;
+  public var winterSolstice as DateAndTime = null;
+
+  public var summerSolsticeDaylight as SunRiseSunSet = null;
+  public var winterSolsticeDaylight as SunRiseSunSet = null;
+  public var anyMessage = null;
+
+  public function setLocation(locArray) {
+    self.location = {
+      :latitude => locArray[0],
+      :longitude => locArray[1]
+    };
   }
 
 }

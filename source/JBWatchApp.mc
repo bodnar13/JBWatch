@@ -48,12 +48,12 @@ class JBWatchApp extends App.AppBase {
   var delegate = [];
 
   // Astronomy and other data
-  var astroData = null;
+  static var astroData = null;
 
   function initialize() {
     AppBase.initialize();
-    self.astroData = new AstroData();
     readConfig();
+    self.astroData = new AstroData();
     calcSleepTime();
   }
   
@@ -71,7 +71,7 @@ class JBWatchApp extends App.AppBase {
 
     function getInitialView() {
       if (view == null ) {
-        view=new JBWatchView(astroData);
+        view=new JBWatchView();
       }
       return [view];
     }
@@ -86,7 +86,6 @@ class JBWatchApp extends App.AppBase {
     function onBackgroundData(data) {
       if (data.get("position") != null) {
           calcAstroData(data.get("position"));
-          self.view.astroData = self.astroData;
       }
        Ui.requestUpdate();
     }
@@ -174,18 +173,18 @@ class JBWatchApp extends App.AppBase {
   }
  
    /**
-   * @param {array} location as [latitude,longitude]
-   * @param {Dictionary} dateNow
-   * @return {array}  [[sunRiseLocalHour, sunRiseLocalMinutes], [sunSetLocalHour, sunSetLocalMinutes]]
+   * @param {array} location as latitude,longitude
+   * @param {DateAndTime} dateNow
+   * @return {SunRiseSunSet}
    */
   function dayLight(location,dateNow) {
-    var year = dateNow.get("year");
-    var month = dateNow.get("month");
-    var day = dateNow.get("day");
-    var timezone = dateNow.get("timezone");
+    var year = dateNow.year;
+    var month = dateNow.month;
+    var day = dateNow.day;
+    var timezone = dateNow.timezone;
 
-    var latitude = location[:latitude];
-    var longitude = location[:longitude];
+    var latitude = location.latitude;
+    var longitude = location.longitude;
     var zenith = 90.833333;
       /* other options
         var zenith_civil = 96;
@@ -308,7 +307,7 @@ class JBWatchApp extends App.AppBase {
 
   function getEquinoxOrSolstice(eventNr,dateNow) {
     
-    var year = dateNow.get("year");
+    var year = dateNow.year;
 
     var Y = (year - 2000) / 1000.0;
   
@@ -413,23 +412,23 @@ class JBWatchApp extends App.AppBase {
     var minute = gregorianInfo.min;
     var dst = System.getClockTime().dst;
     var timezone = Time.Gregorian.info(moment, Time.FORMAT_SHORT).hour - Time.Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
-    if (monkeyVersion < 3.3) {
-      if ( astroData.springEquinox  != null && astroData.summerSolstice != null && astroData.fallEquinox != null || astroData.winterSolstice != null) {  // If has season data
-        if (dst > 0) {    // Summer Time DST
-          if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) {  // winter time in summer
-            timezone++;
-//            System.println("Winter month: " + month + " in summer (" + astroData.equinoxAndSolstice[0][1] + "-" + astroData.equinoxAndSolstice[3][1] + ")  at: " + Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).month);
+    try {
+      if (monkeyVersion < 3.3) {
+        if ( astroData.springEquinox  != null && astroData.summerSolstice != null && astroData.fallEquinox != null || astroData.winterSolstice != null) {  // If has season data
+          if (dst > 0) {    // Summer Time DST
+            if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) {  // winter time in summer
+              timezone++;
+            }
+          } else {  // Winter Time
+            if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) { // summer time in winter
+              timezone--;
+            }            
           }
-        } else {  // Winter Time
-          if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) { // summer time in winter
-            timezone--;
-//            System.println("Summer month: " + month + " in winter (" + astroData.equinoxAndSolstice[0][1] + "-" + astroData.equinoxAndSolstice[3][1] + ")  at: " + Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT).month);
-          }            
         }
-      }
+      } 
+    } catch (ex) {
     }
-//    System.println(" dst: " + System.getClockTime().dst);
-    return { "timezone" => timezone, "year" => year, "month" => month, "day" => day, "hour" => hour, "minute" => minute};
+    return new DateAndTime({:timezone => timezone, :year => year, :month => month, :day => day, :hour => hour, :minute => minute});
   }
 
   /**
@@ -464,17 +463,19 @@ class JBWatchApp extends App.AppBase {
 
   function calcAstroData(location) {
     self.astroData = new AstroData();
-    self.astroData.setLocation(location);
+    self.astroData.location = new GeoLocation({ :latitude => location[0], :longitude => location[1] });
     var dateNow = getDateFromTime(Time.now());
-    // sunrise sunset now
-    self.astroData.dayLight = dayLight( self.astroData.location , dateNow);
     // seasons starts
     self.astroData.springEquinox = getEquinoxOrSolstice(0,dateNow);
     self.astroData.summerSolstice = getEquinoxOrSolstice(1,dateNow);
     self.astroData.fallEquinox = getEquinoxOrSolstice(2,dateNow);
     self.astroData.winterSolstice = getEquinoxOrSolstice(3,dateNow);
-    // sunrise sunset on season starts
-    getSolsticeSunriseSunset();
+    if (self.showSunrise) {
+      // sunrise sunset now
+      self.astroData.dayLight = dayLight( self.astroData.location , dateNow);
+      // sunrise sunset on season starts
+      getSolsticeSunriseSunset();
+    }
   }
 
 }
@@ -491,13 +492,14 @@ class DayTime {
 
 (:background)
 class DateAndTime {
+  public var timezone = null;
   public var year = null;
   public var month = null;
   public var day = null;
   public var hour = null;
   public var minute = null;
-
   function initialize(options) {
+    self.timezone = options[:timezone];
     self.year = options[:year];
     self.month = options[:month];
     self.day = options[:day];
@@ -518,8 +520,18 @@ class SunRiseSunSet {
 }
 
 (:background)
+class GeoLocation {
+  public var latitude = null;
+  public var longitude = null;
+  function initialize(options) {
+    latitude = options[:latitude];
+    longitude = options[:longitude];
+  }
+}
+
+(:background)
 class AstroData {
-  public var location = null;
+  public var location as GeoLocation = null;
   public var dayLight as SunRiseSunSet = null;
   
   public var springEquinox as DateAndTime = null;
@@ -530,12 +542,4 @@ class AstroData {
   public var summerSolsticeDaylight as SunRiseSunSet = null;
   public var winterSolsticeDaylight as SunRiseSunSet = null;
   public var anyMessage = null;
-
-  public function setLocation(locArray) {
-    self.location = {
-      :latitude => locArray[0],
-      :longitude => locArray[1]
-    };
   }
-
-}

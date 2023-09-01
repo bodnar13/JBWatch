@@ -8,14 +8,13 @@ using Toybox.Position;
 class JBWatchView extends Ui.WatchFace {
 
   var device=System.getDeviceSettings();
-
-  public var astroData = null;
   
   var zoom=1;
   var rel_sleep_ring  = 3;
   var rel_hour_ring   = 10;
   var rel_month_ring  = 26;
   var rel_season_ring = 32;
+  var rel_dayLight_ring = 34;
   
   var rel_cross_in   = 5;
   var rel_cross_out  = 3;
@@ -41,7 +40,7 @@ class JBWatchView extends Ui.WatchFace {
   var sleep_ring  = zoom*(radius - rel_sleep_ring);  // 117;
   var hour_ring   = zoom*(radius - rel_hour_ring);   // 110;
   var month_ring  = zoom*(radius - rel_month_ring);  // 94;
-  var season_ring = zoom*(radius - rel_season_ring + (JBWatchApp.showMonth ? 0 : rel_hour_ring)); // 88;
+  var season_ring = zoom*(radius - (JBWatchApp.showMonth ? rel_season_ring  : rel_month_ring)); ;
   
   var minute_size = 10;
   
@@ -49,7 +48,8 @@ class JBWatchView extends Ui.WatchFace {
   var minute_hand = hour_ring - 20;   // 110;
 
   var dayLight_hand = season_ring / 8;
-  var dayLight_ring = season_ring - 4;
+  var season_ring_width = 5;
+  var dayLight_ring = zoom*((JBWatchApp.showSeason ? radius - rel_dayLight_ring : season_ring));
   
   var progress = 20;
   
@@ -64,7 +64,6 @@ class JBWatchView extends Ui.WatchFace {
   var time_month_size = 5;
   
   var penWidthWide = 2;
-  var season_ring_width = 5;
   var sleep_ring_width = 5;
   
     
@@ -76,9 +75,8 @@ class JBWatchView extends Ui.WatchFace {
 
   var refreshrate = 10;
   
-  function initialize(astroData) {
+  function initialize() {
     WatchFace.initialize();
-    self.astroData = astroData;
   }
 
   function onLayout(dc) {
@@ -272,15 +270,15 @@ function hoursFace(today,dc) {
 
   function seasons(dc) {
     try {
-    if ( !JBWatchApp.showSeason || astroData.springEquinox == null || astroData.summerSolstice == null || astroData.fallEquinox == null || astroData.winterSolstice == null) {
+    if ( !JBWatchApp.showSeason || JBWatchApp.astroData.springEquinox == null || JBWatchApp.astroData.summerSolstice == null || JBWatchApp.astroData.fallEquinox == null || JBWatchApp.astroData.winterSolstice == null) {
       return; 
     }
       // SEASONS
     dc.setPenWidth(season_ring_width);
-    var startSpring = - 90 - ((astroData.springEquinox.month -1 ) / 12d * 360 + astroData.springEquinox.day / 365d * 360);
-    var startSummer = - 90 - ((astroData.summerSolstice.month -1 ) / 12d * 360 + astroData.summerSolstice.day / 365d * 360);
-    var startFall = - 90 - ((astroData.fallEquinox.month -1 ) / 12d * 360 + astroData.fallEquinox.day / 365d * 360);
-    var startWinter = - 90 - ((astroData.winterSolstice.month -1 ) / 12d * 360 + astroData.winterSolstice.day / 365d * 360);
+    var startSpring = - 90 - ((JBWatchApp.astroData.springEquinox.month -1 ) / 12d * 360 + JBWatchApp.astroData.springEquinox.day / 365d * 360);
+    var startSummer = - 90 - ((JBWatchApp.astroData.summerSolstice.month -1 ) / 12d * 360 + JBWatchApp.astroData.summerSolstice.day / 365d * 360);
+    var startFall = - 90 - ((JBWatchApp.astroData.fallEquinox.month -1 ) / 12d * 360 + JBWatchApp.astroData.fallEquinox.day / 365d * 360);
+    var startWinter = - 90 - ((JBWatchApp.astroData.winterSolstice.month -1 ) / 12d * 360 + JBWatchApp.astroData.winterSolstice.day / 365d * 360);
 
     // Winter
     dc.setColor(JBWatchApp.winterColor, JBWatchApp.faceBackgroundColor);
@@ -338,8 +336,8 @@ function hoursFace(today,dc) {
 
 
   function showMessage(dc) {
-    if ( astroData.anyMessage != null && astroData.anyMessage.length() > 0  ) {
-      dc.drawText(center_x , txtLine3, Gfx.FONT_XTINY , astroData.anyMessage, Gfx.TEXT_JUSTIFY_CENTER);
+    if ( JBWatchApp.astroData.anyMessage != null && JBWatchApp.astroData.anyMessage.length() > 0  ) {
+      dc.drawText(center_x , txtLine3, Gfx.FONT_XTINY , JBWatchApp.astroData.anyMessage, Gfx.TEXT_JUSTIFY_CENTER);
     }
   }
 
@@ -353,18 +351,21 @@ function hoursFace(today,dc) {
   }
 
   function dayLight(dc) {
-    var markerHight = 0.05;
-    if (astroData.dayLight != null ) {
-      drawDayLight(dc, astroData.dayLight.sunRise.hour, astroData.dayLight.sunRise.minute, markerHight);
-      drawDayLight(dc, astroData.dayLight.sunSet.hour, astroData.dayLight.sunSet.minute, markerHight);
+    if (!JBWatchApp.showSunrise) {
+      return;
     }
-    if (astroData.summerSolsticeDaylight != null && astroData.summerSolsticeDaylight != null) {
+    var markerHight = 0.05;
+    if (JBWatchApp.astroData.dayLight != null ) {
+      drawDayLight(dc, JBWatchApp.astroData.dayLight.sunRise.hour, JBWatchApp.astroData.dayLight.sunRise.minute, markerHight);
+      drawDayLight(dc, JBWatchApp.astroData.dayLight.sunSet.hour, JBWatchApp.astroData.dayLight.sunSet.minute, markerHight);
+    }
+    if (JBWatchApp.astroData.summerSolsticeDaylight != null && JBWatchApp.astroData.summerSolsticeDaylight != null) {
       // Summer Solstice Daylight
-      drawDayRange(dc, astroData.summerSolsticeDaylight.sunRise.hour, astroData.summerSolsticeDaylight.sunRise.minute, markerHight);
-      drawDayRange(dc, astroData.summerSolsticeDaylight.sunSet.hour, astroData.summerSolsticeDaylight.sunSet.minute, markerHight);
+      drawDayRange(dc, JBWatchApp.astroData.summerSolsticeDaylight.sunRise.hour, JBWatchApp.astroData.summerSolsticeDaylight.sunRise.minute, markerHight);
+      drawDayRange(dc, JBWatchApp.astroData.summerSolsticeDaylight.sunSet.hour, JBWatchApp.astroData.summerSolsticeDaylight.sunSet.minute, markerHight);
       // Winter Solstice Daylight
-      drawDayRange(dc, astroData.winterSolsticeDaylight.sunRise.hour, astroData.winterSolsticeDaylight.sunRise.hour, markerHight);
-      drawDayRange(dc, astroData.winterSolsticeDaylight.sunSet.hour, astroData.winterSolsticeDaylight.sunSet.minute, markerHight);
+      drawDayRange(dc, JBWatchApp.astroData.winterSolsticeDaylight.sunRise.hour, JBWatchApp.astroData.winterSolsticeDaylight.sunRise.minute, markerHight);
+      drawDayRange(dc, JBWatchApp.astroData.winterSolsticeDaylight.sunSet.hour, JBWatchApp.astroData.winterSolsticeDaylight.sunSet.minute, markerHight);
     }
   }
 
@@ -384,8 +385,8 @@ function hoursFace(today,dc) {
 
     dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
     var radius = Math.PI * -1.5 + Math.toRadians(dlHour * 15) + Math.toRadians(dlMinutes * 15 / 60);
-    var x= center_x + Math.cos(radius) * (sleep_ring - rel_sleep_ring);
-    var y= center_y + Math.sin(radius) * (sleep_ring - rel_sleep_ring);
+    var x= center_x + Math.cos(radius) * (sleep_ring - rel_sleep_ring -1);
+    var y= center_y + Math.sin(radius) * (sleep_ring - rel_sleep_ring -1);
     var xh= center_x + Math.cos(radius + markerHight / 2) * (sleep_ring);
     var yh= center_y + Math.sin(radius + markerHight / 2) * (sleep_ring);
     var xi= center_x + Math.cos(radius - markerHight / 2) * (sleep_ring);

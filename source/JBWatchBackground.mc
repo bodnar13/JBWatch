@@ -1,8 +1,6 @@
-using Toybox.WatchUi as Ui;
-using Toybox.Application as App;
-using Toybox.Graphics as Gfx;
+import Toybox.WatchUi;
 
-class JBWatchBackground extends Ui.Drawable {
+class JBWatchBackground extends Drawable {
 
   function initialize() {
     var dictionary = {
@@ -12,7 +10,7 @@ class JBWatchBackground extends Ui.Drawable {
   }
 
   function draw(dc) {
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     dc.clear();    
   }
 

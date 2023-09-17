@@ -1,10 +1,45 @@
-using Toybox.Application as App;
-using Toybox.System as System;
-using Toybox.Background as BackGrnd;
-using Toybox.Time as Time;
-using Toybox.WatchUi as Ui;
+import Toybox.Application;
+import Toybox.System;
+import Toybox.Time;
+import Toybox.WatchUi;
 
-class JBWatchApp extends App.AppBase {
+
+  // Configuration
+  var eventName = null;
+  var eventDate = null;
+  var showEvent = false;
+  var faceForegroundColor = null;
+  var faceBackgroundColor = null;
+  var ringColor = null;
+  var handColor = null;
+  var hourDotsColor = null;
+  var monthDotsColor = null;
+  var sleepColor = null;
+  var springColor = null;
+  var summerColor = null;
+  var autumnColor = null;
+  var winterColor = null;
+  var sleepStart = 22;
+  var sleepEnd = 6;
+
+  var showMinutes = false;
+  var showSeason = false;
+  var showSunrise = false;
+  var showMonth = false;
+  var showRings = true;
+  var showDate = true;
+
+  var hourStyle = null;
+
+  var enableNightScreen = true;
+
+  var sleepStartTime = null;
+  var sleepEndTime = null;
+
+  // Astronomy and other data
+  var astroData = null;
+
+class JBWatchApp extends AppBase {
 
   const device = System.getDeviceSettings();
   const monkeyVersion = Lang.format("$1$.$2$$3$", device.monkeyVersion).toFloat();
@@ -13,42 +48,10 @@ class JBWatchApp extends App.AppBase {
   var view = null;
   var menu = null;
 
-  // Configuration
-  static var eventName = null;
-  static var eventDate = null;
-  static var showEvent = false;
-  static var faceForegroundColor = null;
-  static var faceBackgroundColor = null;
-  static var ringColor = null;
-  static var handColor = null;
-  static var hourDotsColor = null;
-  static var monthDotsColor = null;
-  static var sleepColor = null;
-  static var springColor = null;
-  static var summerColor = null;
-  static var autumnColor = null;
-  static var winterColor = null;
-  static var sleepStart = 22;
-  static var sleepEnd = 6;
 
-  static var showMinutes = false;
-  static var showSeason = false;
-  static var showSunrise = false;
-  static var showMonth = false;
-  static var showRings = true;
-  static var showDate = true;
-
-  static var hourStyle = null;
-
-  static var enableNightScreen = true;
-
-  static var sleepStartTime = null;
-  static var sleepEndTime = null;
 
   var delegate = [];
 
-  // Astronomy and other data
-  static var astroData = null;
 
   function initialize() {
     AppBase.initialize();
@@ -66,7 +69,7 @@ class JBWatchApp extends App.AppBase {
 
   function onSettingsChanged() {
     readConfig();
-    Ui.requestUpdate();
+    WatchUi.requestUpdate();
   }
 
     function getInitialView() {
@@ -77,7 +80,7 @@ class JBWatchApp extends App.AppBase {
     }
     
     function getServiceDelegate() { 
-      if (JBWatchApp.showSunrise && self.delegate.size() == 0) {
+      if (showSunrise && self.delegate.size() == 0) {
           self.delegate.add( new JBWatchPositionDelegate() );
       }
       return self.delegate;
@@ -87,85 +90,85 @@ class JBWatchApp extends App.AppBase {
       if (data.get("position") != null) {
           calcAstroData(data.get("position"));
       }
-       Ui.requestUpdate();
+       WatchUi.requestUpdate();
     }
     
     function readConfig() {
       try {
-        App.Properties.setValue("deviceId",System.getDeviceSettings().uniqueIdentifier);
+        Properties.setValue("deviceId",System.getDeviceSettings().uniqueIdentifier);
       } catch (e) {
       } 
-      var defaultColor=App.Properties.getValue("defaultColor");
+      var defaultColor=Properties.getValue("defaultColor");
       if (defaultColor) {
          resetColors();
       } 
       eventName = Application.Properties.getValue("eventName");
       eventDate = Application.Properties.getValue("eventDate");
       showEvent = Application.Properties.getValue("showEvent");
-      faceForegroundColor = App.Properties.getValue("faceForegroundColor");
-      faceBackgroundColor = App.Properties.getValue("faceBackgroundColor");
-      ringColor = App.Properties.getValue("ringColor");
-      handColor = App.Properties.getValue("handColor");
-      hourDotsColor = App.Properties.getValue("hourDotsColor");
-      monthDotsColor = App.Properties.getValue("monthDotsColor");
-      sleepColor = App.Properties.getValue("sleepColor");
+      faceForegroundColor = Properties.getValue("faceForegroundColor");
+      faceBackgroundColor = Properties.getValue("faceBackgroundColor");
+      ringColor = Properties.getValue("ringColor");
+      handColor = Properties.getValue("handColor");
+      hourDotsColor = Properties.getValue("hourDotsColor");
+      monthDotsColor = Properties.getValue("monthDotsColor");
+      sleepColor = Properties.getValue("sleepColor");
      
-      springColor = App.Properties.getValue("springColor");
-      summerColor = App.Properties.getValue("summerColor");
-      autumnColor = App.Properties.getValue("autumnColor");
-      winterColor = App.Properties.getValue("winterColor");
+      springColor = Properties.getValue("springColor");
+      summerColor = Properties.getValue("summerColor");
+      autumnColor = Properties.getValue("autumnColor");
+      winterColor = Properties.getValue("winterColor");
          
-      sleepStart = App.Properties.getValue("sleepStart");
-      sleepEnd = App.Properties.getValue("sleepEnd");
+      sleepStart = Properties.getValue("sleepStart");
+      sleepEnd = Properties.getValue("sleepEnd");
       if (sleepStart <0 || sleepStart >24 || sleepEnd <0 || sleepEnd >24) {
          sleepStart = 22;
         sleepEnd = 6;
       } 
-      showRings = App.Properties.getValue("showRings");
-      showDate = App.Properties.getValue("showDate");
-      showMinutes = App.Properties.getValue("showMinutes");
-      showMonth = App.Properties.getValue("showMonth");
-      showSeason = App.Properties.getValue("showSeason");
-      showSunrise = App.Properties.getValue("showSunrise");
+      showRings = Properties.getValue("showRings");
+      showDate = Properties.getValue("showDate");
+      showMinutes = Properties.getValue("showMinutes");
+      showMonth = Properties.getValue("showMonth");
+      showSeason = Properties.getValue("showSeason");
+      showSunrise = Properties.getValue("showSunrise");
       
-      hourStyle = (App.Properties.getValue("hourStyle")==1 ? "dots" : "lines");
-      enableNightScreen = App.Properties.getValue("enableNightScreen");
+      hourStyle = (Properties.getValue("hourStyle")==1 ? "dots" : "lines");
+      enableNightScreen = Properties.getValue("enableNightScreen");
     }
   
     function resetColors() {
       try {
-        App.Properties.setValue("faceForegroundColor", 0xFFFFFF);
-        App.Properties.setValue("faceBackgroundColor", 0x000000);
-        App.Properties.setValue("ringColor", 0xFFFFFF);
-        App.Properties.setValue("handColor", 0xFFFFFF);
-        App.Properties.setValue("hourDotsColor", 0xFFFFFF);
-        App.Properties.setValue("monthDotsColor", 0xFFFFFF);
-        App.Properties.setValue("sleepColor", 0xFF0000);
+        Properties.setValue("faceForegroundColor", 0xFFFFFF);
+        Properties.setValue("faceBackgroundColor", 0x000000);
+        Properties.setValue("ringColor", 0xFFFFFF);
+        Properties.setValue("handColor", 0xFFFFFF);
+        Properties.setValue("hourDotsColor", 0xFFFFFF);
+        Properties.setValue("monthDotsColor", 0xFFFFFF);
+        Properties.setValue("sleepColor", 0xFF0000);
       
-        App.Properties.setValue("springColor", 0x00FF00);
-        App.Properties.setValue("summerColor", 0xFF0000);
-        App.Properties.setValue("autumnColor", 0xFF5500);
-        App.Properties.setValue("winterColor", 0xFFFFFF);
+        Properties.setValue("springColor", 0x00FF00);
+        Properties.setValue("summerColor", 0xFF0000);
+        Properties.setValue("autumnColor", 0xFF5500);
+        Properties.setValue("winterColor", 0xFFFFFF);
       } catch (ex) {
       } 
                                
   }
   
-  static function calcSleepTime() {
+  function calcSleepTime() {
     try {
-      sleepStartTime = new Time.Moment(Time.today().value() + (JBWatchApp.sleepStart) * 3600);
+      sleepStartTime = new Moment(Time.today().value() + (sleepStart) * 3600);
       var sleepHours = 0;
       var dayShift = true;
-      if (JBWatchApp.sleepStart > JBWatchApp.sleepEnd ) {
-        sleepHours = 24 - JBWatchApp.sleepStart + JBWatchApp.sleepEnd;
+      if (sleepStart > sleepEnd ) {
+        sleepHours = 24 - sleepStart + sleepEnd;
       } else {
-        sleepHours = JBWatchApp.sleepEnd - JBWatchApp.sleepStart;
+        sleepHours = sleepEnd - sleepStart;
         dayShift = false;
       } 
-      sleepEndTime = sleepStartTime.add(new Time.Duration(sleepHours * 3600));
+      sleepEndTime = sleepStartTime.add(new Duration(sleepHours * 3600));
       if ( dayShift && sleepEndTime.value() > Time.now().value() + 24 * 3600 ) {
-        sleepStartTime = sleepStartTime.subtract(new Time.Duration(24 * 3600));
-        sleepEndTime  = sleepEndTime.subtract(new Time.Duration(24 * 3600));
+        sleepStartTime = sleepStartTime.subtract(new Duration(24 * 3600));
+        sleepEndTime  = sleepEndTime.subtract(new Duration(24 * 3600));
       }
       } catch (ex) {
       }
@@ -404,14 +407,14 @@ class JBWatchApp extends App.AppBase {
   }
 
   function getDateFromTime(moment) {
-    var gregorianInfo = Time.Gregorian.info(moment, Time.FORMAT_SHORT);
+    var gregorianInfo = Gregorian.info(moment, Time.FORMAT_SHORT);
     var year = gregorianInfo.year;
     var month = gregorianInfo.month;
     var day = gregorianInfo.day;
     var hour = gregorianInfo.hour;
     var minute = gregorianInfo.min;
     var dst = System.getClockTime().dst;
-    var timezone = Time.Gregorian.info(moment, Time.FORMAT_SHORT).hour - Time.Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
+    var timezone = Gregorian.info(moment, Time.FORMAT_SHORT).hour - Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
     try {
       if (monkeyVersion < 3.3) {
         if ( astroData.springEquinox  != null && astroData.summerSolstice != null && astroData.fallEquinox != null || astroData.winterSolstice != null) {  // If has season data
@@ -437,7 +440,7 @@ class JBWatchApp extends App.AppBase {
   *   winterSolsticeDaylight
   */
   function getSolsticeSunriseSunset() {
-    var dateSummer = getDateFromTime(Time.Gregorian.moment({
+    var dateSummer = getDateFromTime(Gregorian.moment({
         :year => astroData.summerSolstice.year,
         :month => astroData.summerSolstice.month,
         :day => astroData.summerSolstice.day,
@@ -446,7 +449,7 @@ class JBWatchApp extends App.AppBase {
         }
       )
     );
-    var dateWinter = getDateFromTime(Time.Gregorian.moment({
+    var dateWinter = getDateFromTime(Gregorian.moment({
         :year => astroData.winterSolstice.year,
         :month => astroData.winterSolstice.month,
         :day => astroData.winterSolstice.day,
@@ -456,7 +459,7 @@ class JBWatchApp extends App.AppBase {
       )
     );
     
-    // JBWatchApp.anyMessage = "S:" + dateSummer.get("timezone") + "W:" + dateWinter.get("timezone") + "M:" + dateWinter.get("month") + "D:" + dateWinter.get("day");
+    // anyMessage = "S:" + dateSummer.get("timezone") + "W:" + dateWinter.get("timezone") + "M:" + dateWinter.get("month") + "D:" + dateWinter.get("day");
     astroData.summerSolsticeDaylight = dayLight(astroData.location,dateSummer);
     astroData.winterSolsticeDaylight = dayLight(astroData.location,dateWinter);
   }
@@ -542,4 +545,5 @@ class AstroData {
   public var summerSolsticeDaylight as SunRiseSunSet = null;
   public var winterSolsticeDaylight as SunRiseSunSet = null;
   public var anyMessage = null;
-  }
+}
+

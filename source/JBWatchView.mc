@@ -1,11 +1,10 @@
-using Toybox.WatchUi as Ui;
-using Toybox.Graphics as Gfx;
-using Toybox.System;
-using Toybox.Lang as Lang;
-using Toybox.Time;
-using Toybox.Position;
+import Toybox.WatchUi;
+import Toybox.Graphics;
+import Toybox.System;
+import Toybox.Time;
 
-class JBWatchView extends Ui.WatchFace {
+
+class JBWatchView extends WatchFace {
 
   var device=System.getDeviceSettings();
   
@@ -25,7 +24,7 @@ class JBWatchView extends Ui.WatchFace {
   var center_x = device.screenWidth / 2; 
   var center_y = device.screenHeight / 2; 
   var radius = center_x;
-  var fontHeight = Gfx.getFontHeight(Gfx.FONT_XTINY);
+  var fontHeight = Graphics.getFontHeight(Graphics.FONT_XTINY);
   
   var txtLine2 = radius - radius * 0.4;      
   var txtLine1 = txtLine2 - fontHeight;
@@ -40,7 +39,7 @@ class JBWatchView extends Ui.WatchFace {
   var sleep_ring  = zoom*(radius - rel_sleep_ring);  // 117;
   var hour_ring   = zoom*(radius - rel_hour_ring);   // 110;
   var month_ring  = zoom*(radius - rel_month_ring);  // 94;
-  var season_ring = zoom*(radius - (JBWatchApp.showMonth ? rel_season_ring  : rel_month_ring)); ;
+  var season_ring = zoom*(radius - (showMonth ? rel_season_ring  : rel_month_ring)); ;
   
   var minute_size = 10;
   
@@ -49,7 +48,7 @@ class JBWatchView extends Ui.WatchFace {
 
   var dayLight_hand = season_ring / 8;
   var season_ring_width = 5;
-  var dayLight_ring = zoom*((JBWatchApp.showSeason ? radius - rel_dayLight_ring : season_ring));
+  var dayLight_ring = zoom*((showSeason ? radius - rel_dayLight_ring : season_ring));
   
   var progress = 20;
   
@@ -98,14 +97,14 @@ class JBWatchView extends Ui.WatchFace {
     View.onUpdate(dc);
     clockTime = System.getClockTime();
     sleepHours = 0;
-    if (JBWatchApp.sleepStart > JBWatchApp.sleepEnd ) {
-      sleepHours = 24 - JBWatchApp.sleepStart + JBWatchApp.sleepEnd;
+    if (sleepStart > sleepEnd ) {
+      sleepHours = 24 - sleepStart + sleepEnd;
     } else {
-      sleepHours = JBWatchApp.sleepEnd - JBWatchApp.sleepStart;
+      sleepHours = sleepEnd - sleepStart;
     }
-      if (JBWatchApp.enableNightScreen 
-          && JBWatchApp.sleepStartTime.lessThan( Time.now() )  
-          && JBWatchApp.sleepEndTime.greaterThan( Time.now() ) )  {
+      if (enableNightScreen 
+          && sleepStartTime.lessThan( Time.now() )  
+          && sleepEndTime.greaterThan( Time.now() ) )  {
         sleep(dc, true);
         minuteHand(dc);
         cross(dc);
@@ -113,13 +112,13 @@ class JBWatchView extends Ui.WatchFace {
       }          
       // DateTime variables
       now = Time.now();
-      monthName = Time.Gregorian.info(now, Time.FORMAT_LONG).month;
-      month = Time.Gregorian.info(now, Time.FORMAT_SHORT).month;
+      monthName = Gregorian.info(now, Time.FORMAT_LONG).month;
+      month = Gregorian.info(now, Time.FORMAT_SHORT).month;
          
-      var today = Time.Gregorian.info(now, Time.FORMAT_LONG);
+      var today = Gregorian.info(now, Time.FORMAT_LONG);
        
-      showMessage(dc);   
-      showEvent(dc);      
+      message(dc);   
+      event(dc);      
       monthFace(today, dc);
       hoursFace(today, dc);
       seasons(dc);
@@ -145,15 +144,15 @@ class JBWatchView extends Ui.WatchFace {
   //  MONTH
   function monthFace(today,dc) {
 
-    if ( !JBWatchApp.showMonth ) {
+    if ( !showMonth ) {
       return;
     }                
     var mo = 0;
-     if ( JBWatchApp.showRings ) {
-        dc.setColor(JBWatchApp.ringColor, JBWatchApp.ringColor);
+     if ( showRings ) {
+        dc.setColor(ringColor, ringColor);
         dc.drawCircle(center_x,center_y, month_ring);
     }
-    dc.setColor(JBWatchApp.monthDotsColor, JBWatchApp.monthDotsColor);
+    dc.setColor(monthDotsColor, monthDotsColor);
     for (var i = (Math.PI / 180) *-240; i < Math.PI * 0.5 ; i += Math.PI / 6 ) {
       var x = center_x + Math.cos(i) * month_ring;
       var y = center_y + Math.sin(i) * month_ring;
@@ -161,9 +160,9 @@ class JBWatchView extends Ui.WatchFace {
       dc.setPenWidth(1);
       mo++;
     }
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     mo = 0;
-    var mox = Time.Gregorian.moment({:month =>1, :day => 1}).subtract(now).value() / 86400;         
+    var mox = Gregorian.moment({:month =>1, :day => 1}).subtract(now).value() / 86400;         
     for (var i = (Math.PI / 180) *-270; i <(Math.PI / 180) * 90 ; i += Math.PI / 183 ) {
       var x=center_x + Math.cos(i) * (month_ring);
       var y=center_y + Math.sin(i) * (month_ring);
@@ -171,10 +170,10 @@ class JBWatchView extends Ui.WatchFace {
       var yh=center_y + Math.sin(i) * (month_ring - month_hand);
       if ( mox == mo ) {
         dc.setPenWidth(penWidthWide);
-        dc.setColor(JBWatchApp.handColor, JBWatchApp.handColor);
+        dc.setColor(handColor, handColor);
         dc.drawLine(x, y, xh, yh);
-        dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
-        dc.drawArc(center_x, center_y, month_ring, Gfx.ARC_CLOCKWISE, 270, 359 - ( (i / Math.PI) * 180) );
+        dc.setColor(faceForegroundColor, faceBackgroundColor);
+        dc.drawArc(center_x, center_y, month_ring, Graphics.ARC_CLOCKWISE, 270, 359 - ( (i / Math.PI) * 180) );
         dc.setPenWidth(1);
       }
       mo++;
@@ -186,12 +185,12 @@ class JBWatchView extends Ui.WatchFace {
 function hoursFace(today,dc) {
 
   var q = Math.round(clockTime.min / 12.0);
-  if ( JBWatchApp.showRings ) {
-    dc.setColor(JBWatchApp.ringColor, JBWatchApp.ringColor);
+  if ( showRings ) {
+    dc.setColor(ringColor, ringColor);
     dc.drawCircle(center_x,center_y, hour_ring);
-    dc.setColor(JBWatchApp.hourDotsColor, JBWatchApp.hourDotsColor);
+    dc.setColor(hourDotsColor, hourDotsColor);
   }
-  showHourMarks(dc, 0, 24, hour_ring, (JBWatchApp.hourStyle.equals("dots") ? hour_size_dots : hour_size_lines) , JBWatchApp.hourStyle) ;       
+  showHourMarks(dc, 0, 24, hour_ring, (hourStyle.equals("dots") ? hour_size_dots : hour_size_lines) , hourStyle) ;       
   var j = 5;
   var m = 0;
   // 12 minutes
@@ -201,28 +200,28 @@ function hoursFace(today,dc) {
     var xme = center_x+Math.cos(i) * (hour_ring);
     var yme = center_y+Math.sin(i) * (hour_ring);
     if (j < 5) {
-      if (JBWatchApp.showMinutes ) {
+      if (showMinutes ) {
         dc.drawLine(xms, yms, xme, yme);
       }
     } else {
       j = 0;
     }
     if ( m == clockTime.hour * 5 + q) {
-      if ( JBWatchApp.showRings ) {
-        dc.setColor(JBWatchApp.ringColor, JBWatchApp.ringColor);
-        dc.drawArc(center_x, center_y, hour_ring, Gfx.ARC_CLOCKWISE, 270, 360- ( (i / Math.PI) * 180) );
-        dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+      if ( showRings ) {
+        dc.setColor(ringColor, ringColor);
+        dc.drawArc(center_x, center_y, hour_ring, Graphics.ARC_CLOCKWISE, 270, 360- ( (i / Math.PI) * 180) );
+        dc.setColor(faceForegroundColor, faceBackgroundColor);
       }
-      if ( JBWatchApp.showDate ) {
-        dc.drawText(center_x , txtLine2, Gfx.FONT_XTINY , today.year + "." + today.month + " ." + today.day, Gfx.TEXT_JUSTIFY_CENTER);
-        dc.drawText(center_x , txtLine1, Gfx.FONT_XTINY , today.day_of_week, Gfx.TEXT_JUSTIFY_CENTER);
+      if ( showDate ) {
+        dc.drawText(center_x , txtLine2, Graphics.FONT_XTINY , today.year + "." + today.month + " ." + today.day, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(center_x , txtLine1, Graphics.FONT_XTINY , today.day_of_week, Graphics.TEXT_JUSTIFY_CENTER);
       }
     }
       m++;
       j++;   
   }
   var stats= System.getSystemStats();
-  dc.drawText(center_x , txtLine5, Gfx.FONT_XTINY ,stats.battery.format("%2d") + "%" , Gfx.TEXT_JUSTIFY_CENTER);
+  dc.drawText(center_x , txtLine5, Graphics.FONT_XTINY ,stats.battery.format("%2d") + "%" , Graphics.TEXT_JUSTIFY_CENTER);
   minuteHand(dc);
 
 }
@@ -244,11 +243,11 @@ function hoursFace(today,dc) {
         var xhp=Math.cos(i) * (time_minute_size);
         var yhp=Math.sin(i) * (time_minute_size);
            
-        dc.setColor(JBWatchApp.handColor, JBWatchApp.handColor);
+        dc.setColor(handColor, handColor);
         dc.setPenWidth(penWidthWide);
         dc.drawLine(xh, yh, x - xhp, y - yhp);
         dc.setPenWidth(1);
-        dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+        dc.setColor(faceForegroundColor, faceBackgroundColor);
         break;
       }
         m++; 
@@ -258,42 +257,42 @@ function hoursFace(today,dc) {
   // SLEEP
   function sleep(dc, withHours) { 
     dc.setPenWidth(sleep_ring_width);
-    dc.setColor(JBWatchApp.sleepColor, JBWatchApp.sleepColor);
-    dc.drawArc(center_x, center_y, sleep_ring, Gfx.ARC_CLOCKWISE, 270 + 15 * (24 - JBWatchApp.sleepStart), 270 + 15 * (24 - JBWatchApp.sleepEnd));
+    dc.setColor(sleepColor, sleepColor);
+    dc.drawArc(center_x, center_y, sleep_ring, Graphics.ARC_CLOCKWISE, 270 + 15 * (24 - sleepStart), 270 + 15 * (24 - sleepEnd));
 
     if (withHours) {         
-      showHourMarks(dc, JBWatchApp.sleepStart, sleepHours, sleep_ring, (JBWatchApp.hourStyle.equals("dots") ? hour_size_dots : hour_size_lines), JBWatchApp.hourStyle);
+      showHourMarks(dc, sleepStart, sleepHours, sleep_ring, (hourStyle.equals("dots") ? hour_size_dots : hour_size_lines), hourStyle);
     }
     dc.setPenWidth(1);
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
   }
 
   function seasons(dc) {
     try {
-    if ( !JBWatchApp.showSeason || JBWatchApp.astroData.springEquinox == null || JBWatchApp.astroData.summerSolstice == null || JBWatchApp.astroData.fallEquinox == null || JBWatchApp.astroData.winterSolstice == null) {
+    if ( !showSeason || astroData.springEquinox == null || astroData.summerSolstice == null || astroData.fallEquinox == null || astroData.winterSolstice == null) {
       return; 
     }
       // SEASONS
     dc.setPenWidth(season_ring_width);
-    var startSpring = - 90 - ((JBWatchApp.astroData.springEquinox.month -1 ) / 12d * 360 + JBWatchApp.astroData.springEquinox.day / 365d * 360);
-    var startSummer = - 90 - ((JBWatchApp.astroData.summerSolstice.month -1 ) / 12d * 360 + JBWatchApp.astroData.summerSolstice.day / 365d * 360);
-    var startFall = - 90 - ((JBWatchApp.astroData.fallEquinox.month -1 ) / 12d * 360 + JBWatchApp.astroData.fallEquinox.day / 365d * 360);
-    var startWinter = - 90 - ((JBWatchApp.astroData.winterSolstice.month -1 ) / 12d * 360 + JBWatchApp.astroData.winterSolstice.day / 365d * 360);
+    var startSpring = - 90 - ((astroData.springEquinox.month -1 ) / 12d * 360 + astroData.springEquinox.day / 365d * 360);
+    var startSummer = - 90 - ((astroData.summerSolstice.month -1 ) / 12d * 360 + astroData.summerSolstice.day / 365d * 360);
+    var startFall = - 90 - ((astroData.fallEquinox.month -1 ) / 12d * 360 + astroData.fallEquinox.day / 365d * 360);
+    var startWinter = - 90 - ((astroData.winterSolstice.month -1 ) / 12d * 360 + astroData.winterSolstice.day / 365d * 360);
 
     // Winter
-    dc.setColor(JBWatchApp.winterColor, JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startWinter, startSpring );
+    dc.setColor(winterColor, faceBackgroundColor);
+    dc.drawArc(center_x, center_y, season_ring, Graphics.ARC_CLOCKWISE, startWinter, startSpring );
     // Spring
-    dc.setColor(JBWatchApp.springColor, JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startSpring, startSummer );
+    dc.setColor(springColor, faceBackgroundColor);
+    dc.drawArc(center_x, center_y, season_ring, Graphics.ARC_CLOCKWISE, startSpring, startSummer );
     // Summer         
-    dc.setColor(JBWatchApp.summerColor, JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startSummer, startFall);
+    dc.setColor(summerColor, faceBackgroundColor);
+    dc.drawArc(center_x, center_y, season_ring, Graphics.ARC_CLOCKWISE, startSummer, startFall);
     // Fall         
-    dc.setColor(JBWatchApp.autumnColor, JBWatchApp.faceBackgroundColor);
-    dc.drawArc(center_x, center_y, season_ring, Gfx.ARC_CLOCKWISE, startFall, startWinter);
+    dc.setColor(autumnColor, faceBackgroundColor);
+    dc.drawArc(center_x, center_y, season_ring, Graphics.ARC_CLOCKWISE, startFall, startWinter);
          
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     dc.setPenWidth(1);
     } catch (ex) {
       
@@ -303,7 +302,7 @@ function hoursFace(today,dc) {
    
   function cross(dc) {
     dc.setPenWidth(1);
-    dc.setColor(Gfx.COLOR_WHITE, JBWatchApp.faceBackgroundColor);
+    dc.setColor(Graphics.COLOR_WHITE, faceBackgroundColor);
     // left
     dc.drawLine(center_x - sleep_ring - rel_cross_out,  center_y,center_x - season_ring + rel_cross_in , center_y);
     // right
@@ -315,7 +314,7 @@ function hoursFace(today,dc) {
   }
     
   function showHourMarks(dc, fromHour, nrOfHours, radius, size, style) {
-    dc.setColor(JBWatchApp.hourDotsColor, JBWatchApp.hourDotsColor);
+    dc.setColor(hourDotsColor, hourDotsColor);
      dc.setPenWidth(2);
      for (var i = Math.PI / 2 + (fromHour*Math.PI / 12); i <= Math.PI / 2 + (fromHour * Math.PI / 12) + nrOfHours * Math.PI / 12 ; i += Math.PI / 12) {
        if ( style.equals("dots") ) {
@@ -330,47 +329,47 @@ function hoursFace(today,dc) {
         dc.drawLine(x1, y1, x2, y2);
       }
     }
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     dc.setPenWidth(1);
   }
 
 
-  function showMessage(dc) {
-    if ( JBWatchApp.astroData.anyMessage != null && JBWatchApp.astroData.anyMessage.length() > 0  ) {
-      dc.drawText(center_x , txtLine3, Gfx.FONT_XTINY , JBWatchApp.astroData.anyMessage, Gfx.TEXT_JUSTIFY_CENTER);
+  function message(dc) {
+    if ( astroData.anyMessage != null && astroData.anyMessage.length() > 0  ) {
+      dc.drawText(center_x , txtLine3, Graphics.FONT_XTINY , astroData.anyMessage, Graphics.TEXT_JUSTIFY_CENTER);
     }
   }
 
-  function showEvent(dc) {
-    var eventDays = Math.round(new Time.Moment(JBWatchApp.eventDate).subtract(now).value() / Time.Gregorian.SECONDS_PER_DAY);
-    if (JBWatchApp.showEvent && eventDays >= 0 ) {
-      var daysString = Ui.loadResource(Rez.Strings.daysTitle);
-      dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
-      dc.drawText(center_x ,txtLine4, Gfx.FONT_XTINY , JBWatchApp.eventName + " " + eventDays + " " + daysString, Gfx.TEXT_JUSTIFY_CENTER);
+  function event(dc) {
+    var eventDays = Math.round(new Moment(eventDate).subtract(now).value() / Gregorian.SECONDS_PER_DAY);
+    if (showEvent && eventDays >= 0 ) {
+      var daysString = WatchUi.loadResource(Rez.Strings.daysTitle);
+      dc.setColor(faceForegroundColor, faceBackgroundColor);
+      dc.drawText(center_x ,txtLine4, Graphics.FONT_XTINY , eventName + " " + eventDays + " " + daysString, Graphics.TEXT_JUSTIFY_CENTER);
     }
   }
 
   function dayLight(dc) {
-    if (!JBWatchApp.showSunrise) {
+    if (!showSunrise) {
       return;
     }
     var markerHight = 0.05;
-    if (JBWatchApp.astroData.dayLight != null ) {
-      drawDayLight(dc, JBWatchApp.astroData.dayLight.sunRise.hour, JBWatchApp.astroData.dayLight.sunRise.minute, markerHight);
-      drawDayLight(dc, JBWatchApp.astroData.dayLight.sunSet.hour, JBWatchApp.astroData.dayLight.sunSet.minute, markerHight);
+    if (astroData.dayLight != null ) {
+      drawDayLight(dc, astroData.dayLight.sunRise.hour, astroData.dayLight.sunRise.minute, markerHight);
+      drawDayLight(dc, astroData.dayLight.sunSet.hour, astroData.dayLight.sunSet.minute, markerHight);
     }
-    if (JBWatchApp.astroData.summerSolsticeDaylight != null && JBWatchApp.astroData.summerSolsticeDaylight != null) {
+    if (astroData.summerSolsticeDaylight != null && astroData.summerSolsticeDaylight != null) {
       // Summer Solstice Daylight
-      drawDayRange(dc, JBWatchApp.astroData.summerSolsticeDaylight.sunRise.hour, JBWatchApp.astroData.summerSolsticeDaylight.sunRise.minute, markerHight);
-      drawDayRange(dc, JBWatchApp.astroData.summerSolsticeDaylight.sunSet.hour, JBWatchApp.astroData.summerSolsticeDaylight.sunSet.minute, markerHight);
+      drawDayRange(dc, astroData.summerSolsticeDaylight.sunRise.hour, astroData.summerSolsticeDaylight.sunRise.minute, markerHight);
+      drawDayRange(dc, astroData.summerSolsticeDaylight.sunSet.hour, astroData.summerSolsticeDaylight.sunSet.minute, markerHight);
       // Winter Solstice Daylight
-      drawDayRange(dc, JBWatchApp.astroData.winterSolsticeDaylight.sunRise.hour, JBWatchApp.astroData.winterSolsticeDaylight.sunRise.minute, markerHight);
-      drawDayRange(dc, JBWatchApp.astroData.winterSolsticeDaylight.sunSet.hour, JBWatchApp.astroData.winterSolsticeDaylight.sunSet.minute, markerHight);
+      drawDayRange(dc, astroData.winterSolsticeDaylight.sunRise.hour, astroData.winterSolsticeDaylight.sunRise.minute, markerHight);
+      drawDayRange(dc, astroData.winterSolsticeDaylight.sunSet.hour, astroData.winterSolsticeDaylight.sunSet.minute, markerHight);
     }
   }
 
   function drawDayLight(dc, dlHour, dlMinutes, markerHight) {
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     var radius = Math.PI * -1.5 + Math.toRadians(dlHour * 15) + Math.toRadians(dlMinutes * 15 / 60);
     var x= center_x + Math.cos(radius) * (dayLight_ring);
     var y= center_y + Math.sin(radius) * (dayLight_ring);
@@ -383,7 +382,7 @@ function hoursFace(today,dc) {
 
    function drawDayRange(dc, dlHour, dlMinutes, markerHight) {
 
-    dc.setColor(JBWatchApp.faceForegroundColor, JBWatchApp.faceBackgroundColor);
+    dc.setColor(faceForegroundColor, faceBackgroundColor);
     var radius = Math.PI * -1.5 + Math.toRadians(dlHour * 15) + Math.toRadians(dlMinutes * 15 / 60);
     var x= center_x + Math.cos(radius) * (sleep_ring - rel_sleep_ring -1);
     var y= center_y + Math.sin(radius) * (sleep_ring - rel_sleep_ring -1);

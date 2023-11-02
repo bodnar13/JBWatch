@@ -1,43 +1,44 @@
 import Toybox.Application;
 import Toybox.System;
 import Toybox.Time;
+import Toybox.Position;
 import Toybox.WatchUi;
 
 
-  // Configuration
-  var eventName = null;
-  var eventDate = null;
-  var showEvent = false;
-  var faceForegroundColor = null;
-  var faceBackgroundColor = null;
-  var ringColor = null;
-  var handColor = null;
-  var hourDotsColor = null;
-  var monthDotsColor = null;
-  var sleepColor = null;
-  var springColor = null;
-  var summerColor = null;
-  var autumnColor = null;
-  var winterColor = null;
-  var sleepStart = 22;
-  var sleepEnd = 6;
+// Configuration
+var eventName = null;
+var eventDate = null;
+var showEvent = false;
+var faceForegroundColor = null;
+var faceBackgroundColor = null;
+var ringColor = null;
+var handColor = null;
+var hourDotsColor = null;
+var monthDotsColor = null;
+var sleepColor = null;
+var springColor = null;
+var summerColor = null;
+var autumnColor = null;
+var winterColor = null;
+var sleepStart = 22;
+var sleepEnd = 6;
 
-  var showMinutes = false;
-  var showSeason = false;
-  var showSunrise = false;
-  var showMonth = false;
-  var showRings = true;
-  var showDate = true;
+var showMinutes = false;
+var showSeason = false;
+var showSunrise = false;
+var showMonth = false;
+var showRings = true;
+var showDate = true;
 
-  var hourStyle = null;
+var hourStyle = null;
 
-  var enableNightScreen = true;
+var enableNightScreen = true;
 
-  var sleepStartTime = null;
-  var sleepEndTime = null;
+var sleepStartTime = null;
+var sleepEndTime = null;
 
-  // Astronomy and other data
-  var astroData = null;
+// Astronomy and other data
+var astroData = null;
 
 class JBWatchApp extends AppBase {
 
@@ -308,10 +309,8 @@ class JBWatchApp extends AppBase {
   }
 
 
-  function getEquinoxOrSolstice(eventNr,dateNow) {
+  function getEquinoxOrSolstice(eventNr,year) {
     
-    var year = dateNow.year;
-
     var Y = (year - 2000) / 1000.0;
   
     var JDEMarch  = 2451623.80984d + 365242.37404 * Y + 0.05169 * Math.pow(Y, 2) - 0.00411 * Math.pow(Y, 3) - 0.00057 * Math.pow(Y, 4);
@@ -414,23 +413,21 @@ class JBWatchApp extends AppBase {
     var hour = gregorianInfo.hour;
     var minute = gregorianInfo.min;
     var dst = System.getClockTime().dst;
-    var timezone = Gregorian.info(moment, Time.FORMAT_SHORT).hour - Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
-    try {
-      if (monkeyVersion < 3.3) {
-        if ( astroData.springEquinox  != null && astroData.summerSolstice != null && astroData.fallEquinox != null || astroData.winterSolstice != null) {  // If has season data
-          if (dst > 0) {    // Summer Time DST
-            if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) {  // winter time in summer
-              timezone++;
-            }
-          } else {  // Winter Time
-            if (month < astroData.springEquinox.month ||  month >= astroData.winterSolstice.month) { // summer time in winter
-              timezone--;
-            }            
-          }
-        }
-      } 
-    } catch (ex) {
+    var now = Gregorian.info(Time.now(), Time.FORMAT_SHORT);
+    var timezone  = Gregorian.info(moment, Time.FORMAT_SHORT).hour - Gregorian.utcInfo(moment, Time.FORMAT_SHORT).hour;
+    if (monkeyVersion < 3.3 ) {   // No LocalMoment supported , guess ...
+      if (now.month == month && now.day == day) {  // today
+        timezone = timezone + dst/3600;
+      } else if (moment.greaterThan(astroData.springEquinox.toMoment()) && moment.lessThan(astroData.fallEquinox.toMoment())) {
+        timezone++;
+      }
+    } else {
+      var lMoment = Time.Gregorian.localMoment(astroData.location, moment);
+      if (lMoment != null ) {
+        timezone = lMoment.getOffset()/3600;
+      }
     }
+
     return new DateAndTime({:timezone => timezone, :year => year, :month => month, :day => day, :hour => hour, :minute => minute});
   }
 
@@ -459,23 +456,28 @@ class JBWatchApp extends AppBase {
       )
     );
     
-    // anyMessage = "S:" + dateSummer.get("timezone") + "W:" + dateWinter.get("timezone") + "M:" + dateWinter.get("month") + "D:" + dateWinter.get("day");
-    astroData.summerSolsticeDaylight = dayLight(astroData.location,dateSummer);
-    astroData.winterSolsticeDaylight = dayLight(astroData.location,dateWinter);
+    astroData.summerSolsticeDaylight = dayLight(astroData.geoLocation,dateSummer);
+    astroData.winterSolsticeDaylight = dayLight(astroData.geoLocation,dateWinter);
   }
 
-  function calcAstroData(location) {
+  function calcAstroData(coordinates) {
     self.astroData = new AstroData();
-    self.astroData.location = new GeoLocation({ :latitude => location[0], :longitude => location[1] });
-    var dateNow = getDateFromTime(Time.now());
+    self.astroData.geoLocation = new GeoLocation({ :latitude => coordinates[0], :longitude => coordinates[1] });
+    self.astroData.location = new Position.Location({
+        :latitude => coordinates[0],
+        :longitude => coordinates[1],
+        :format => :degrees
+    });
+    var year = Gregorian.info(Time.now(), Time.FORMAT_SHORT).year;
     // seasons starts
-    self.astroData.springEquinox = getEquinoxOrSolstice(0,dateNow);
-    self.astroData.summerSolstice = getEquinoxOrSolstice(1,dateNow);
-    self.astroData.fallEquinox = getEquinoxOrSolstice(2,dateNow);
-    self.astroData.winterSolstice = getEquinoxOrSolstice(3,dateNow);
+    self.astroData.springEquinox = getEquinoxOrSolstice(0,year);
+    self.astroData.summerSolstice = getEquinoxOrSolstice(1,year);
+    self.astroData.fallEquinox = getEquinoxOrSolstice(2,year);
+    self.astroData.winterSolstice = getEquinoxOrSolstice(3,year);
     if (self.showSunrise) {
+      var dateNow = getDateFromTime(Time.now());
       // sunrise sunset now
-      self.astroData.dayLight = dayLight( self.astroData.location , dateNow);
+      self.astroData.dayLight = dayLight( self.astroData.geoLocation , dateNow);
       // sunrise sunset on season starts
       getSolsticeSunriseSunset();
     }
@@ -509,6 +511,18 @@ class DateAndTime {
     self.hour = options[:hour];
     self.minute = options[:minute];
   }
+
+  function toMoment() {
+    return Gregorian.moment({
+      :year => self.year,
+      :month => self.month,
+      :day => self.day,
+      :hour => self.hour,
+      :minute => self.minute
+      }
+    );
+
+  }
 }
 
 (:background)
@@ -534,7 +548,8 @@ class GeoLocation {
 
 (:background)
 class AstroData {
-  public var location as GeoLocation = null;
+  public var geoLocation as GeoLocation = null;
+  public var location as Position.Location = null;
   public var dayLight as SunRiseSunSet = null;
   
   public var springEquinox as DateAndTime = null;

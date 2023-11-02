@@ -13,7 +13,7 @@ var connected=false;
   function initialize() {
     ServiceDelegate.initialize();
     device = System.getDeviceSettings();
-    Background.registerForTemporalEvent(new Duration(600));
+    Background.registerForTemporalEvent(new Duration(21600));
   }
 
   function onTemporalEvent() {
